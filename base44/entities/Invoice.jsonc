@@ -1,0 +1,49 @@
+{
+  "name": "Invoice",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string"
+    },
+    "invoice_number": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Paid",
+        "Outstanding",
+        "Pending"
+      ],
+      "default": "Pending"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "paid_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "Retainer",
+        "Production Deposit",
+        "Progress Payment",
+        "Final Invoice"
+      ]
+    }
+  },
+  "required": [
+    "project_id",
+    "invoice_number",
+    "amount"
+  ]
+}

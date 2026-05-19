@@ -1,0 +1,40 @@
+{
+  "name": "Selection",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Door Style",
+        "Wood Species",
+        "Finish / Paint / Stain",
+        "Hardware",
+        "Countertop Material",
+        "Inserts / Accessories"
+      ]
+    },
+    "item_name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Pending",
+        "Confirmed",
+        "Locked"
+      ],
+      "default": "Pending"
+    }
+  },
+  "required": [
+    "project_id",
+    "category",
+    "item_name"
+  ]
+}

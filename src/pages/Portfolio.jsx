@@ -1,0 +1,123 @@
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { X, ArrowRight } from 'lucide-react';
+import PageHeader from '../components/shared/PageHeader';
+import SectionReveal from '../components/shared/SectionReveal';
+
+const categories = ['All', 'Kitchens', 'Bathrooms', 'Closets', 'Home Bars', 'Pantries', 'Custom Millwork'];
+
+const portfolioItems = [
+  { title: 'Modern Walnut Kitchen', category: 'Kitchens', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/525cf1a40_generated_f39324c2.png', desc: 'A stunning walnut kitchen with waterfall island and brushed gold accents.' },
+  { title: 'Elegant Master Bath', category: 'Bathrooms', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/b397ccb5a_generated_11790ae1.png', desc: 'White oak vanity with marble countertop and gold fixtures.' },
+  { title: 'Gentleman\'s Home Bar', category: 'Home Bars', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/c49bb3d3d_generated_56d29da3.png', desc: 'Dark charcoal cabinetry with floating shelves and wine storage.' },
+  { title: 'Custom Walk-in Closet', category: 'Closets', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/979f9e117_generated_9a7831d4.png', desc: 'Floor-to-ceiling built-ins with island and integrated lighting.' },
+  { title: 'Designer Pantry', category: 'Pantries', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/439913dd9_generated_0a51d658.png', desc: 'Custom pantry with pull-out drawers and glass-front cabinets.' },
+  { title: 'Bedroom Built-ins', category: 'Custom Millwork', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/7ed4204eb_generated_f4c5e2c9.png', desc: 'Warm walnut bookshelves and window seat with integrated lighting.' },
+  { title: 'Luxury Laundry Room', category: 'Custom Millwork', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/a68208666_generated_ea15a7b3.png', desc: 'White shaker cabinets with quartz countertop and brass hardware.' },
+  { title: 'Two-Tone Kitchen', category: 'Kitchens', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/7ebfa3d58_generated_8388bd8f.png', desc: 'Mixed wood and white cabinetry with statement range hood.' },
+  { title: 'Kitchen Island Detail', category: 'Kitchens', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/438f663cc_generated_53716705.png', desc: 'Rift-cut white oak island with waterfall quartz countertop.' },
+  { title: 'Open Concept Kitchen', category: 'Kitchens', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/3b0ab420b_generated_3a49d52d.png', desc: 'Wide-format kitchen with custom cabinetry and natural lighting.' },
+];
+
+export default function Portfolio() {
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const filtered = activeCategory === 'All'
+    ? portfolioItems
+    : portfolioItems.filter(item => item.category === activeCategory);
+
+  return (
+    <div>
+      <PageHeader
+        title="Our Portfolio"
+        subtitle="A curated collection of our finest work"
+        imageUrl="https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/525cf1a40_generated_f39324c2.png"
+      />
+
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-7xl mx-auto">
+          {/* Filter tabs */}
+          <SectionReveal>
+            <div className="flex flex-wrap justify-center gap-2 mb-12">
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-5 py-2.5 rounded-full font-body text-sm transition-all ${
+                    activeCategory === cat
+                      ? 'bg-gold text-white'
+                      : 'bg-warm-gray text-muted-foreground hover:bg-gold/10 hover:text-gold'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </SectionReveal>
+
+          {/* Masonry grid */}
+          <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
+            {filtered.map((item, i) => (
+              <SectionReveal key={item.title} delay={i * 0.05}>
+                <div
+                  className="break-inside-avoid overflow-hidden rounded-lg group cursor-pointer"
+                  onClick={() => setSelectedItem(item)}
+                >
+                  <div className="relative">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                      <div className="absolute bottom-0 left-0 right-0 p-6">
+                        <p className="font-body text-gold text-xs tracking-wider uppercase">{item.category}</p>
+                        <h3 className="font-heading text-xl text-white mt-1">{item.title}</h3>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </SectionReveal>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <SectionReveal>
+            <div className="text-center mt-16 p-12 bg-cream rounded-xl">
+              <h3 className="font-heading text-2xl md:text-3xl text-foreground mb-3">Love what you see?</h3>
+              <p className="font-body text-muted-foreground mb-6">Let's build yours.</p>
+              <Link to="/contact">
+                <Button className="bg-gold hover:bg-gold/90 text-white font-body tracking-wider px-8 py-6 text-sm">
+                  START YOUR PROJECT <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          </SectionReveal>
+        </div>
+      </section>
+
+      {/* Lightbox */}
+      <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden border-none bg-charcoal">
+          {selectedItem && (
+            <div>
+              <img
+                src={selectedItem.image}
+                alt={selectedItem.title}
+                className="w-full max-h-[70vh] object-cover"
+              />
+              <div className="p-6">
+                <p className="font-body text-gold text-xs tracking-wider uppercase">{selectedItem.category}</p>
+                <h3 className="font-heading text-2xl text-white mt-2 mb-2">{selectedItem.title}</h3>
+                <p className="font-body text-white/60 text-sm">{selectedItem.desc}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

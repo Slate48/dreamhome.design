@@ -1,0 +1,83 @@
+{
+  "name": "Project",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Project name (e.g. 'Kitchen Remodel')"
+    },
+    "client_email": {
+      "type": "string",
+      "description": "Client user email"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "project_type": {
+      "type": "string",
+      "enum": [
+        "Kitchen",
+        "Bathroom",
+        "Closets",
+        "Home Bar",
+        "Pantry",
+        "Full Home",
+        "Other"
+      ]
+    },
+    "assigned_designer": {
+      "type": "string"
+    },
+    "project_coordinator": {
+      "type": "string"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "estimated_completion": {
+      "type": "string",
+      "format": "date"
+    },
+    "current_stage": {
+      "type": "number",
+      "default": 1,
+      "description": "1-8 stage number"
+    },
+    "stage_notes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stage": {
+            "type": "number"
+          },
+          "note": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Active",
+        "On Hold",
+        "Completed",
+        "Cancelled"
+      ],
+      "default": "Active"
+    }
+  },
+  "required": [
+    "name",
+    "client_email"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "name": "Testimonial",
+  "type": "object",
+  "properties": {
+    "client_name": {
+      "type": "string"
+    },
+    "quote": {
+      "type": "string"
+    },
+    "rating": {
+      "type": "number"
+    },
+    "project_type": {
+      "type": "string"
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "client_name",
+    "quote",
+    "rating"
+  ]
+}

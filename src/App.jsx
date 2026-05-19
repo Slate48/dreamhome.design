@@ -5,43 +5,82 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-// Add page imports here
+
+// Public pages
+import Home from './pages/Home';
+import About from './pages/About';
+import Process from './pages/Process';
+import Portfolio from './pages/Portfolio';
+import FAQ from './pages/FAQ';
+import Investment from './pages/Investment';
+import Contact from './pages/Contact';
+
+// Layouts
+import PublicLayout from './components/shared/PublicLayout';
+import PortalLayout from './components/portal/PortalLayout';
+
+// Portal pages
+import Dashboard from './pages/portal/Dashboard';
+import MyProject from './pages/portal/MyProject';
+import Documents from './pages/portal/Documents';
+import Selections from './pages/portal/Selections';
+import Messages from './pages/portal/Messages';
+import Billing from './pages/portal/Billing';
+import Help from './pages/portal/Help';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
-  // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      <div className="fixed inset-0 flex items-center justify-center bg-cream">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="font-body text-muted-foreground text-sm tracking-wider">DREAM HOME DESIGN</p>
+        </div>
       </div>
     );
   }
 
-  // Handle authentication errors
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
       navigateToLogin();
       return null;
     }
   }
 
-  // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
+      {/* Public website */}
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/process" element={<Process />} />
+        <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/investment" element={<Investment />} />
+        <Route path="/contact" element={<Contact />} />
+      </Route>
+
+      {/* Client portal */}
+      <Route element={<PortalLayout />}>
+        <Route path="/portal" element={<Dashboard />} />
+        <Route path="/portal/project" element={<MyProject />} />
+        <Route path="/portal/documents" element={<Documents />} />
+        <Route path="/portal/selections" element={<Selections />} />
+        <Route path="/portal/messages" element={<Messages />} />
+        <Route path="/portal/billing" element={<Billing />} />
+        <Route path="/portal/help" element={<Help />} />
+      </Route>
+
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
 };
 
-
 function App() {
-
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>

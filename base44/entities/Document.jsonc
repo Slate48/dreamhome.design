@@ -1,0 +1,39 @@
+{
+  "name": "Document",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "Associated project ID"
+    },
+    "name": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Contracts",
+        "Design Drawings",
+        "Shop Drawings",
+        "Change Orders",
+        "Care Instructions",
+        "Final Invoice",
+        "Client Upload"
+      ]
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "file_type": {
+      "type": "string"
+    },
+    "uploaded_by": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "project_id",
+    "name",
+    "file_url"
+  ]
+}
