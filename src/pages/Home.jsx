@@ -7,27 +7,27 @@ import FoundersSection from '../components/home/FoundersSection';
 import TestimonialsSection from '../components/home/TestimonialsSection';
 import InstagramStrip from '../components/home/InstagramStrip';
 
-const heroImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/525cf1a40_generated_f39324c2.png';
+const heroImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/c9af43de9_DR0A9180-topaz-sharpen-color-lighting-denoise.jpg';
 const foundersImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/db4f3b857_generated_6799216e.png';
 
 const portfolioImages = [
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/525cf1a40_generated_f39324c2.png', label: 'Modern Walnut Kitchen' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/b397ccb5a_generated_11790ae1.png', label: 'Elegant Bathroom Vanity' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/c49bb3d3d_generated_56d29da3.png', label: 'Custom Home Bar' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/979f9e117_generated_9a7831d4.png', label: 'Walk-in Closet' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/439913dd9_generated_0a51d658.png', label: 'Designer Pantry' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/7ed4204eb_generated_f4c5e2c9.png', label: 'Bedroom Built-ins' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/a68208666_generated_ea15a7b3.png', label: 'Luxury Laundry Room' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/7ebfa3d58_generated_8388bd8f.png', label: 'Two-tone Kitchen' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/ae20c57b9_DR0A9183-topaz-denoise-sharpen-lighting-color-upscale-2x.jpg', label: 'Modern Kitchen' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/517b44a0d_1P9A0041.jpg', label: 'Elegant Bathroom Vanity' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/65be1340d_78.jpg', label: 'Custom Home Bar' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/17a3c89d4_1P9A0053copy.jpg', label: 'Walk-in Closet' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/e914f00ad_DR0A9154-topaz-sharpen-denoise-lighting-lighting.jpg', label: 'Designer Pantry' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/783cb5f09_52.jpg', label: 'Custom Home Office' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/0870165b6__29A8276.jpg', label: 'Custom Wine Bar' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/511dc41fa_1P9A0048.jpg', label: 'Custom Walk-in Closet' },
 ];
 
 const instaImages = [
-  'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/525cf1a40_generated_f39324c2.png',
-  'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/438f663cc_generated_53716705.png',
-  'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/b397ccb5a_generated_11790ae1.png',
-  'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/c49bb3d3d_generated_56d29da3.png',
-  'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/979f9e117_generated_9a7831d4.png',
-  'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/7ebfa3d58_generated_8388bd8f.png',
+  'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/df7ac0ee1_DR0A9180-topaz-sharpen-color-lighting-denoise1.jpg',
+  'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/5ccb783b4_DR0A9199.jpg',
+  'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/517b44a0d_1P9A0041.jpg',
+  'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/7e86d5c8d_63.jpg',
+  'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/511dc41fa_1P9A0048.jpg',
+  'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/65be1340d_78.jpg',
 ];
 
 export default function Home() {
