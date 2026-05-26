@@ -4,15 +4,19 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Play } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function HeroSection({ heroImage }) {
+export default function HeroSection() {
   return (
     <section className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden">
-      {/* Background image (video placeholder) */}
-      <img
-        src={heroImage}
-        alt="Luxury custom kitchen"
-        className="absolute inset-0 w-full h-full object-cover scale-105"
-      />
+      {/* YouTube video background */}
+      <div className="absolute inset-0 w-full h-full">
+        <iframe
+          className="absolute w-[300%] h-[300%] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+          src="https://www.youtube.com/embed/sCPU1OBL8VQ?autoplay=1&mute=1&loop=1&playlist=sCPU1OBL8VQ&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1"
+          allow="autoplay; encrypted-media"
+          allowFullScreen
+          title="Hero Video"
+        />
+      </div>
       <div className="absolute inset-0 bg-gradient-to-b from-charcoal/50 via-charcoal/40 to-charcoal/70" />
 
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">

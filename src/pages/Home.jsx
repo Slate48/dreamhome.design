@@ -7,8 +7,8 @@ import FoundersSection from '../components/home/FoundersSection';
 import TestimonialsSection from '../components/home/TestimonialsSection';
 import InstagramStrip from '../components/home/InstagramStrip';
 
-const heroImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/c9af43de9_DR0A9180-topaz-sharpen-color-lighting-denoise.jpg';
-const foundersImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/db4f3b857_generated_6799216e.png';
+const rebeccaImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/b9de115e3_Screenshot2026-05-20at10320PM.png';
+const bryanImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/6704075b6_Screenshot2026-05-20at10140PM.png';
 
 const portfolioImages = [
   { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/ae20c57b9_DR0A9183-topaz-denoise-sharpen-lighting-color-upscale-2x.jpg', label: 'Modern Kitchen' },
@@ -33,11 +33,11 @@ const instaImages = [
 export default function Home() {
   return (
     <div>
-      <HeroSection heroImage={heroImage} />
+      <HeroSection />
       <ServicesStrip />
       <ProcessTeaser />
       <PortfolioGrid images={portfolioImages} />
-      <FoundersSection foundersImage={foundersImage} />
+      <FoundersSection rebeccaImage={rebeccaImage} bryanImage={bryanImage} />
       <TestimonialsSection />
       <InstagramStrip images={instaImages} />
     </div>

@@ -3,18 +3,29 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import SectionReveal from '../shared/SectionReveal';
 
-export default function FoundersSection({ foundersImage }) {
+export default function FoundersSection({ rebeccaImage, bryanImage }) {
   return (
     <section className="py-24 px-4 bg-cream">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <SectionReveal>
-            <div className="relative">
-              <img
-                src={foundersImage}
-                alt="Rebecca & Bryan Siewin"
-                className="w-full rounded-lg shadow-xl"
-              />
+            <div className="grid grid-cols-2 gap-4 relative">
+              <div className="relative">
+                <img
+                  src={rebeccaImage}
+                  alt="Rebecca Siewin"
+                  className="w-full h-80 object-cover object-top rounded-lg shadow-xl"
+                />
+                <p className="text-center font-body text-sm text-muted-foreground mt-2">Rebecca</p>
+              </div>
+              <div className="relative mt-8">
+                <img
+                  src={bryanImage}
+                  alt="Bryan Siewin"
+                  className="w-full h-80 object-cover object-top rounded-lg shadow-xl"
+                />
+                <p className="text-center font-body text-sm text-muted-foreground mt-2">Bryan</p>
+              </div>
               <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-gold/20 rounded-lg -z-10" />
             </div>
           </SectionReveal>
