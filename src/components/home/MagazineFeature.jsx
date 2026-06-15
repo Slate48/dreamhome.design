@@ -8,7 +8,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
 // To update the handbook, replace this URL with the new PDF file URL
-const HANDBOOK_PDF_URL = 'https://media.base44.com/files/public/6a0c98b9972c40dc9ebe5d05/b4354d655_DHDONBOARDINGWELCOMEGUIDE_202601072.pdf';
+const HANDBOOK_PDF_URL = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/9f79840c4_DHDONBOARDINGWELCOMEGUIDE_202601072.pdf';
 
 const FlipPage = React.forwardRef(({ imageUrl, pageNum }, ref) => (
   <div ref={ref} className="bg-white overflow-hidden">
@@ -38,7 +38,7 @@ export default function MagazineFeature() {
 
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
-        const viewport = page.getViewport({ scale: 2.0 });
+        const viewport = page.getViewport({ scale: 1.8 });
         const canvas = document.createElement('canvas');
         canvas.width = viewport.width;
         canvas.height = viewport.height;
@@ -70,13 +70,13 @@ export default function MagazineFeature() {
               <div className="w-full flex justify-center">
                 <HTMLFlipBook
                   ref={bookRef}
-                  width={860}
-                  height={622}
+                  width={620}
+                  height={450}
                   size="fixed"
                   minWidth={320}
-                  maxWidth={1000}
-                  minHeight={232}
-                  maxHeight={724}
+                  maxWidth={700}
+                  minHeight={230}
+                  maxHeight={510}
                   showCover={true}
                   mobileScrollSupport={true}
                   onFlip={(e) => setCurrentPage(e.data)}
@@ -85,12 +85,11 @@ export default function MagazineFeature() {
                   startPage={0}
                   drawShadow={true}
                   flippingTime={700}
-                  usePortrait={true}
+                  usePortrait={false}
                   autoSize={true}
                   maxShadowOpacity={0.5}
                   showPageCorners={true}
                   disableFlipByClick={false}
-                  singlePage={true}
                 >
                   {Array.from({ length: totalPages }, (_, i) => (
                     <FlipPage key={i} pageNum={i + 1} imageUrl={pageImages[i]} />

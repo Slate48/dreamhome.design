@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
   LayoutGrid, Users, HelpCircle, GitBranch, DollarSign,
-  Settings, Image, Menu, X, LogOut, ChevronRight
+  Settings, Image, Menu, X, LogOut, ChevronRight, Star
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -13,6 +13,7 @@ const navItems = [
   { label: 'FAQs', path: '/admin/faqs', icon: HelpCircle },
   { label: 'Process Steps', path: '/admin/process', icon: GitBranch },
   { label: 'Investment', path: '/admin/investment', icon: DollarSign },
+  { label: 'Testimonials', path: '/admin/testimonials', icon: Star },
   { label: 'Site Settings', path: '/admin/settings', icon: Settings },
 ];
 

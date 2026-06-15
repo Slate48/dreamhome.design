@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Image, Users, HelpCircle, GitBranch, DollarSign, Settings, ArrowRight } from 'lucide-react';
+import { Image, Users, HelpCircle, GitBranch, DollarSign, Settings, ArrowRight, Star } from 'lucide-react';
 
 const cards = [
   { label: 'Portfolio', desc: 'Add, reorder, recategorize project photos', path: '/admin/portfolio', icon: Image },
@@ -9,6 +9,7 @@ const cards = [
   { label: 'Process Steps', desc: 'Update the 8-stage process descriptions', path: '/admin/process', icon: GitBranch },
   { label: 'Investment', desc: 'Edit payment tiers and billing info', path: '/admin/investment', icon: DollarSign },
   { label: 'Site Settings', desc: 'Phone, email, address, social links, logo', path: '/admin/settings', icon: Settings },
+  { label: 'Testimonials', desc: 'Add, edit, and feature client reviews', path: '/admin/testimonials', icon: Star },
 ];
 
 export default function AdminDashboard() {

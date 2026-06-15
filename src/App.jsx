@@ -15,6 +15,7 @@ import AdminFAQs from './pages/admin/AdminFAQs';
 import AdminProcess from './pages/admin/AdminProcess';
 import AdminInvestment from './pages/admin/AdminInvestment';
 import AdminSettings from './pages/admin/AdminSettings';
+import AdminTestimonials from './pages/admin/AdminTestimonials';
 
 // Public pages
 import Home from './pages/Home';
@@ -94,6 +95,7 @@ const AuthenticatedApp = () => {
         <Route path="/admin/process" element={<AdminProcess />} />
         <Route path="/admin/investment" element={<AdminInvestment />} />
         <Route path="/admin/settings" element={<AdminSettings />} />
+        <Route path="/admin/testimonials" element={<AdminTestimonials />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />
