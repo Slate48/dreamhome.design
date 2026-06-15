@@ -1,28 +1,55 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import SectionReveal from '../shared/SectionReveal';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Point worker to the correct path
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
 // To update the handbook, replace this URL with the new PDF file URL
 const HANDBOOK_PDF_URL = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/9f79840c4_DHDONBOARDINGWELCOMEGUIDE_202601072.pdf';
-const TOTAL_PAGES = 12;
 
-const Page = React.forwardRef(({ pageNum }, ref) => (
+const FlipPage = React.forwardRef(({ imageUrl, pageNum }, ref) => (
   <div ref={ref} className="bg-white overflow-hidden">
-    <iframe
-      src={`${HANDBOOK_PDF_URL}#page=${pageNum}&toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
-      title={`Handbook page ${pageNum}`}
-      className="w-full h-full border-0 pointer-events-none"
-      style={{ width: '100%', height: '100%' }}
-    />
+    {imageUrl ? (
+      <img src={imageUrl} alt={`Page ${pageNum}`} className="w-full h-full object-cover" />
+    ) : (
+      <div className="w-full h-full flex items-center justify-center bg-warm-gray">
+        <div className="w-6 h-6 border-2 border-gold/40 border-t-gold rounded-full animate-spin" />
+      </div>
+    )}
   </div>
 ));
-
-Page.displayName = 'Page';
+FlipPage.displayName = 'FlipPage';
 
 export default function MagazineFeature() {
   const bookRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const [pageImages, setPageImages] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
+
+  useEffect(() => {
+    async function loadPDF() {
+      const pdf = await pdfjsLib.getDocument({ url: HANDBOOK_PDF_URL, withCredentials: false }).promise;
+      setTotalPages(pdf.numPages);
+      const images = new Array(pdf.numPages).fill(null);
+      setPageImages([...images]);
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 1.8 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        images[i - 1] = dataUrl;
+        setPageImages([...images]);
+      }
+    }
+    loadPDF();
+  }, []);
 
   const prevPage = () => bookRef.current?.pageFlip().flipPrev();
   const nextPage = () => bookRef.current?.pageFlip().flipNext();
@@ -39,55 +66,64 @@ export default function MagazineFeature() {
 
         <SectionReveal>
           <div className="flex flex-col items-center gap-8">
-            <div className="w-full flex justify-center">
-              <HTMLFlipBook
-                ref={bookRef}
-                width={594}
-                height={781}
-                size="fixed"
-                minWidth={300}
-                maxWidth={700}
-                minHeight={400}
-                maxHeight={900}
-                showCover={false}
-                mobileScrollSupport={true}
-                onFlip={(e) => setCurrentPage(e.data)}
-                className="shadow-2xl"
-                style={{}}
-                startPage={0}
-                drawShadow={true}
-                flippingTime={700}
-                usePortrait={false}
-                startZIndex={0}
-                autoSize={true}
-                maxShadowOpacity={0.5}
-                showPageCorners={true}
-                disableFlipByClick={false}
-              >
-                {Array.from({ length: TOTAL_PAGES }, (_, i) => (
-                  <Page key={i + 1} pageNum={i + 1} />
-                ))}
-              </HTMLFlipBook>
-            </div>
+            {totalPages > 0 && (
+              <div className="w-full flex justify-center">
+                <HTMLFlipBook
+                  ref={bookRef}
+                  width={475}
+                  height={625}
+                  size="fixed"
+                  minWidth={280}
+                  maxWidth={600}
+                  minHeight={370}
+                  maxHeight={780}
+                  showCover={true}
+                  mobileScrollSupport={true}
+                  onFlip={(e) => setCurrentPage(e.data)}
+                  className="shadow-2xl"
+                  style={{}}
+                  startPage={0}
+                  drawShadow={true}
+                  flippingTime={700}
+                  usePortrait={false}
+                  autoSize={true}
+                  maxShadowOpacity={0.5}
+                  showPageCorners={true}
+                  disableFlipByClick={false}
+                >
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <FlipPage key={i} pageNum={i + 1} imageUrl={pageImages[i]} />
+                  ))}
+                </HTMLFlipBook>
+              </div>
+            )}
+
+            {totalPages === 0 && (
+              <div className="flex items-center justify-center h-64">
+                <div className="w-8 h-8 border-2 border-gold/40 border-t-gold rounded-full animate-spin" />
+              </div>
+            )}
 
             {/* Controls */}
-            <div className="flex items-center gap-6">
-              <button
-                onClick={prevPage}
-                className="w-10 h-10 rounded-full border border-gold/30 flex items-center justify-center text-gold hover:bg-gold/10 transition-colors"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <span className="font-body text-sm text-muted-foreground tracking-wider">
-                {currentPage + 1} / {TOTAL_PAGES}
-              </span>
-              <button
-                onClick={nextPage}
-                className="w-10 h-10 rounded-full border border-gold/30 flex items-center justify-center text-gold hover:bg-gold/10 transition-colors"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
+            {totalPages > 0 && (
+              <div className="flex items-center gap-6">
+                <button
+                  onClick={prevPage}
+                  className="w-10 h-10 rounded-full border border-gold/30 flex items-center justify-center text-gold hover:bg-gold/10 transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <span className="font-body text-sm text-muted-foreground tracking-wider">
+                  {currentPage + 1} / {totalPages}
+                </span>
+                <button
+                  onClick={nextPage}
+                  className="w-10 h-10 rounded-full border border-gold/30 flex items-center justify-center text-gold hover:bg-gold/10 transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            )}
           </div>
         </SectionReveal>
       </div>
