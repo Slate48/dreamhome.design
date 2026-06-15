@@ -1,12 +1,13 @@
 import React from 'react';
-import { Layers, Palette, Square, ClipboardCheck } from 'lucide-react';
+import { Layers, Grid2x2, Square, Gem, Palette } from 'lucide-react';
 import SectionReveal from '../shared/SectionReveal';
 
 const services = [
   { icon: Layers, label: 'Custom Cabinetry', desc: 'Handcrafted to your exact specifications' },
-  { icon: Palette, label: 'Interior Design', desc: 'Full-service design consultation' },
+  { icon: Grid2x2, label: 'Tailored Closets', desc: 'Custom storage solutions for every space' },
   { icon: Square, label: 'Countertop Fabrication', desc: 'Premium stone & surface selection' },
-  { icon: ClipboardCheck, label: 'Full Project Management', desc: 'Seamless coordination start to finish' },
+  { icon: Gem, label: 'Premium Slab Selection', desc: 'Curated natural stone & luxury materials' },
+  { icon: Palette, label: 'Interior Design', desc: 'Full-service design consultation' },
 ];
 
 export default function ServicesStrip() {
@@ -20,7 +21,7 @@ export default function ServicesStrip() {
           </div>
         </SectionReveal>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
           {services.map((service, i) => (
             <SectionReveal key={service.label} delay={i * 0.1}>
               <div className="text-center group">

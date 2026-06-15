@@ -4,22 +4,34 @@ import SectionReveal from '../shared/SectionReveal';
 
 const testimonials = [
   {
-    name: 'The Martinez Family',
-    quote: 'Dream Home Design transformed our kitchen into something we never imagined possible. The attention to detail, the quality of craftsmanship — it\'s beyond anything we\'ve seen. Rebecca\'s design vision brought our dream to life.',
+    name: 'Jennifer & Mark T.',
+    quote: 'Rebecca and Bryan completely transformed our kitchen. The custom cabinetry is absolutely stunning — every detail was thought through. Our neighbors can\'t stop asking who did it. Dream Home Design is in a class of their own.',
     rating: 5,
-    project: 'Kitchen Remodel, Scottsdale'
+    project: 'Custom Kitchen, Scottsdale'
   },
   {
-    name: 'David & Lauren Chen',
-    quote: 'From the first consultation to the final walkthrough, the entire Dream Home team was exceptional. Bryan kept us informed every step of the way, and the final result exceeded our expectations. Our bathroom is now the highlight of our home.',
+    name: 'The Williams Family',
+    quote: 'We hired Dream Home Design for our master closet and couldn\'t be more thrilled. The design process was seamless, and the finished product looks like something out of a magazine. Bryan was communicative every step of the way.',
     rating: 5,
-    project: 'Master Bath & Closet, Paradise Valley'
+    project: 'Custom Closet, Paradise Valley'
   },
   {
-    name: 'The Andersons',
-    quote: 'We\'ve worked with other cabinet companies before, but Dream Home Design is in a completely different league. The custom pantry and home bar they built for us are works of art. We couldn\'t be happier.',
+    name: 'Sandra M.',
+    quote: 'From the slab selection to the final install, the entire experience was first-class. Rebecca has an incredible eye for design and made sure everything was perfect. Our countertops are absolutely gorgeous.',
     rating: 5,
-    project: 'Pantry & Home Bar, Chandler'
+    project: 'Countertop Fabrication, Chandler'
+  },
+  {
+    name: 'Chris & Amy L.',
+    quote: 'We did a full home remodel with Dream Home Design and they delivered beyond our expectations on every single room. The quality of craftsmanship is unmatched. We would recommend them to anyone looking for the best.',
+    rating: 5,
+    project: 'Full Home, Gilbert'
+  },
+  {
+    name: 'Robert K.',
+    quote: 'Our home bar and pantry turned out better than we ever imagined. The attention to detail is remarkable — every drawer, every shelf, every finish is absolutely perfect. Dream Home Design is worth every penny.',
+    rating: 5,
+    project: 'Home Bar & Pantry, Tempe'
   },
 ];
 

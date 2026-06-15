@@ -4,6 +4,7 @@ import ServicesStrip from '../components/home/ServicesStrip';
 import ProcessTeaser from '../components/home/ProcessTeaser';
 import PortfolioGrid from '../components/home/PortfolioGrid';
 import FoundersSection from '../components/home/FoundersSection';
+import MagazineFeature from '../components/home/MagazineFeature';
 import TestimonialsSection from '../components/home/TestimonialsSection';
 import InstagramStrip from '../components/home/InstagramStrip';
 
@@ -37,6 +38,7 @@ export default function Home() {
       <ServicesStrip />
       <ProcessTeaser />
       <PortfolioGrid images={portfolioImages} />
+      <MagazineFeature />
       <FoundersSection rebeccaImage={rebeccaImage} bryanImage={bryanImage} />
       <TestimonialsSection />
       <InstagramStrip images={instaImages} />
