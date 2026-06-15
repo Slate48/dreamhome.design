@@ -1,0 +1,32 @@
+{
+  "name": "InvestmentTier",
+  "type": "object",
+  "properties": {
+    "step_number": {
+      "type": "number"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    },
+    "payment_methods": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scope_exclusions_note": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "step_number",
+    "title",
+    "description"
+  ]
+}

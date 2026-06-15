@@ -1,0 +1,58 @@
+{
+  "name": "SiteSettings",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "description": "Unique key for this settings record (use 'main')"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "phone_display": {
+      "type": "string"
+    },
+    "email_sales": {
+      "type": "string"
+    },
+    "email_billing": {
+      "type": "string"
+    },
+    "billing_contact_name": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "city_state": {
+      "type": "string"
+    },
+    "google_maps_embed_url": {
+      "type": "string"
+    },
+    "instagram_url": {
+      "type": "string"
+    },
+    "facebook_url": {
+      "type": "string"
+    },
+    "instagram_handle": {
+      "type": "string"
+    },
+    "website_url": {
+      "type": "string"
+    },
+    "consultation_booking_url": {
+      "type": "string"
+    },
+    "logo_url": {
+      "type": "string"
+    },
+    "tagline": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "key"
+  ]
+}

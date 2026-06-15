@@ -6,6 +6,16 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
+// Admin pages
+import AdminLayout from './components/admin/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminPortfolio from './pages/admin/AdminPortfolio';
+import AdminTeam from './pages/admin/AdminTeam';
+import AdminFAQs from './pages/admin/AdminFAQs';
+import AdminProcess from './pages/admin/AdminProcess';
+import AdminInvestment from './pages/admin/AdminInvestment';
+import AdminSettings from './pages/admin/AdminSettings';
+
 // Public pages
 import Home from './pages/Home';
 import About from './pages/About';
@@ -73,6 +83,17 @@ const AuthenticatedApp = () => {
         <Route path="/portal/messages" element={<Messages />} />
         <Route path="/portal/billing" element={<Billing />} />
         <Route path="/portal/help" element={<Help />} />
+      </Route>
+
+      {/* Admin portal */}
+      <Route element={<AdminLayout />}>
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/portfolio" element={<AdminPortfolio />} />
+        <Route path="/admin/team" element={<AdminTeam />} />
+        <Route path="/admin/faqs" element={<AdminFAQs />} />
+        <Route path="/admin/process" element={<AdminProcess />} />
+        <Route path="/admin/investment" element={<AdminInvestment />} />
+        <Route path="/admin/settings" element={<AdminSettings />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />

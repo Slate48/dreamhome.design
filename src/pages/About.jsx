@@ -1,59 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { base44 } from '@/api/base44Client';
 import PageHeader from '../components/shared/PageHeader';
 import SectionReveal from '../components/shared/SectionReveal';
 import { Heart, Eye, Users } from 'lucide-react';
 
 const aboutHero = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/920e96a43_Screenshot2026-04-22094325.jpg';
-const rebeccaImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/b9de115e3_Screenshot2026-05-20at10320PM.png';
-const bryanImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/6704075b6_Screenshot2026-05-20at10140PM.png';
-
-const departments = [
-  {
-    name: 'Design',
-    members: [
-      { name: 'Rebecca Siewin', title: 'Owner & Director of Design', photo: null },
-      { name: 'Veralin Bergen', title: 'Senior Interior & Cabinet Designer', photo: null },
-      { name: 'Stephanie Reuter', title: 'Cabinet Designer', photo: null },
-      { name: 'Anna Troup', title: 'Junior Interior & Cabinet Designer', photo: null },
-      { name: 'Andrea Ortega', title: 'Junior Cabinet Designer', photo: null },
-    ]
-  },
-  {
-    name: 'Sales & Admin',
-    members: [
-      { name: 'Bryan Siewin', title: 'Owner & CEO', photo: null },
-      { name: 'Bojana Sabic', title: 'Office Manager', photo: null },
-      { name: 'Theresa Iselman', title: 'Lead Estimator', photo: null },
-      { name: 'Steve Ramos', title: 'Estimator & Engineer', photo: null },
-    ]
-  },
-  {
-    name: 'Operations',
-    members: [
-      { name: 'Amber Siewin', title: 'Director of Business Services', photo: null },
-      { name: 'Tess Berlinski', title: 'Administrative Assistant', photo: null },
-      { name: 'Angel Vazquez', title: 'Field Project Manager', photo: null },
-      { name: 'Alan Vasquez', title: 'Field Project Manager', photo: null },
-    ]
-  },
-  {
-    name: 'Engineering & Production',
-    members: [
-      { name: 'Chad Siewin', title: 'President of Operations', photo: null },
-      { name: 'Michael Giambone', title: 'Lead Engineer', photo: null },
-      { name: 'Matt Dew', title: 'Engineer', photo: null },
-      { name: 'Kevin Scelza', title: 'Engineer', photo: null },
-    ]
-  },
-  {
-    name: 'Countertop Fabrication',
-    members: [
-      { name: 'Holly Grim', title: 'Fabrication Manager', photo: null },
-      { name: 'Juan Ortiz', title: 'Fabrication Specialist', photo: null },
-      { name: 'Jordan Rowell', title: 'Fabrication Specialist', photo: null },
-    ]
-  }
-];
 
 const values = [
   { icon: Heart, title: 'Craftsmanship', desc: 'Every detail matters. From the selection of premium hardwoods to the precision of our CNC machining, we treat each project as a masterwork — because that\'s exactly what it is.' },
@@ -61,7 +12,24 @@ const values = [
   { icon: Users, title: 'Partnership', desc: 'Your project is a collaboration. We listen deeply, design thoughtfully, and build with the care we\'d give our own homes. Your vision drives every decision we make.' },
 ];
 
+const DEPT_ORDER = ['Design', 'Sales & Admin', 'Operations', 'Engineering & Production', 'Countertop Fabrication'];
+
 export default function About() {
+  const [teamMembers, setTeamMembers] = useState([]);
+
+  useEffect(() => {
+    base44.entities.TeamMember.list('sort_order', 100).then(setTeamMembers);
+  }, []);
+
+  const founders = teamMembers.filter(m => m.is_founder);
+  const nonFounders = teamMembers.filter(m => !m.is_founder);
+
+  const grouped = DEPT_ORDER.reduce((acc, dept) => {
+    const members = nonFounders.filter(m => m.department === dept);
+    if (members.length) acc[dept] = members;
+    return acc;
+  }, {});
+
   return (
     <div>
       <PageHeader
@@ -75,14 +43,26 @@ export default function About() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <SectionReveal>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <img src={rebeccaImage} alt="Rebecca Siewin" className="w-full h-80 object-cover object-top rounded-lg shadow-xl" />
-                <p className="text-center font-body text-sm text-muted-foreground mt-2">Rebecca</p>
-              </div>
-              <div className="mt-8">
-                <img src={bryanImage} alt="Bryan Siewin" className="w-full h-80 object-cover object-top rounded-lg shadow-xl" />
-                <p className="text-center font-body text-sm text-muted-foreground mt-2">Bryan</p>
-              </div>
+              {founders.length > 0 ? founders.map((f, i) => (
+                <div key={f.id} className={i % 2 !== 0 ? 'mt-8' : ''}>
+                  {f.photo_url
+                    ? <img src={f.photo_url} alt={f.name} className="w-full h-80 object-cover object-top rounded-lg shadow-xl" />
+                    : <div className="w-full h-80 rounded-lg shadow-xl bg-warm-gray flex items-center justify-center text-4xl font-heading text-gold/50">{f.name.split(' ').map(n => n[0]).join('')}</div>
+                  }
+                  <p className="text-center font-body text-sm text-muted-foreground mt-2">{f.name.split(' ')[0]}</p>
+                </div>
+              )) : (
+                <>
+                  <div>
+                    <img src="https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/b9de115e3_Screenshot2026-05-20at10320PM.png" alt="Rebecca Siewin" className="w-full h-80 object-cover object-top rounded-lg shadow-xl" />
+                    <p className="text-center font-body text-sm text-muted-foreground mt-2">Rebecca</p>
+                  </div>
+                  <div className="mt-8">
+                    <img src="https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/6704075b6_Screenshot2026-05-20at10140PM.png" alt="Bryan Siewin" className="w-full h-80 object-cover object-top rounded-lg shadow-xl" />
+                    <p className="text-center font-body text-sm text-muted-foreground mt-2">Bryan</p>
+                  </div>
+                </>
+              )}
             </div>
           </SectionReveal>
           <SectionReveal delay={0.2}>
@@ -108,16 +88,16 @@ export default function About() {
             </div>
           </SectionReveal>
 
-          {departments.map((dept, di) => (
-            <SectionReveal key={dept.name} delay={di * 0.1}>
+          {Object.entries(grouped).map(([dept, members], di) => (
+            <SectionReveal key={dept} delay={di * 0.1}>
               <div className="mb-12">
-                <h3 className="font-heading text-xl text-foreground mb-6 pb-3 border-b border-gold/20">{dept.name}</h3>
+                <h3 className="font-heading text-xl text-foreground mb-6 pb-3 border-b border-gold/20">{dept}</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                  {dept.members.map(member => (
-                    <div key={member.name} className="text-center group">
+                  {members.map(member => (
+                    <div key={member.id} className="text-center group">
                       <div className="w-20 h-20 mx-auto mb-3 rounded-full bg-warm-gray overflow-hidden flex items-center justify-center text-2xl font-heading text-gold/70 group-hover:bg-gold/10 transition-colors">
-                        {member.photo
-                          ? <img src={member.photo} alt={member.name} className="w-full h-full object-cover object-top" />
+                        {member.photo_url
+                          ? <img src={member.photo_url} alt={member.name} className="w-full h-full object-cover object-top" />
                           : member.name.split(' ').map(n => n[0]).join('')
                         }
                       </div>
