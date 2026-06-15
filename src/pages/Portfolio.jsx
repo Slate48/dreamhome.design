@@ -19,15 +19,32 @@ const portfolioItems = [
   { title: 'Two-Tone Kitchen', category: 'Kitchens', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/7ebfa3d58_generated_8388bd8f.png', desc: 'Mixed wood and white cabinetry with statement range hood.' },
   { title: 'Kitchen Island Detail', category: 'Kitchens', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/438f663cc_generated_53716705.png', desc: 'Rift-cut white oak island with waterfall quartz countertop.' },
   { title: 'Open Concept Kitchen', category: 'Kitchens', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/3b0ab420b_generated_3a49d52d.png', desc: 'Wide-format kitchen with custom cabinetry and natural lighting.' },
+  // Additional photos — replace null values with real image URLs when available
+  { title: '', category: 'Kitchens', image: null, desc: '' },
+  { title: '', category: 'Kitchens', image: null, desc: '' },
+  { title: '', category: 'Bathrooms', image: null, desc: '' },
+  { title: '', category: 'Bathrooms', image: null, desc: '' },
+  { title: '', category: 'Closets', image: null, desc: '' },
+  { title: '', category: 'Closets', image: null, desc: '' },
+  { title: '', category: 'Home Bars', image: null, desc: '' },
+  { title: '', category: 'Home Bars', image: null, desc: '' },
+  { title: '', category: 'Pantries', image: null, desc: '' },
+  { title: '', category: 'Pantries', image: null, desc: '' },
+  { title: '', category: 'Custom Millwork', image: null, desc: '' },
+  { title: '', category: 'Custom Millwork', image: null, desc: '' },
+  { title: '', category: 'Kitchens', image: null, desc: '' },
+  { title: '', category: 'Bathrooms', image: null, desc: '' },
+  { title: '', category: 'Closets', image: null, desc: '' },
 ];
 
 export default function Portfolio() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedItem, setSelectedItem] = useState(null);
 
-  const filtered = activeCategory === 'All'
+  const filtered = (activeCategory === 'All'
     ? portfolioItems
-    : portfolioItems.filter(item => item.category === activeCategory);
+    : portfolioItems.filter(item => item.category === activeCategory)
+  ).filter(item => item.image);
 
   return (
     <div>

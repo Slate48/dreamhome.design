@@ -3,8 +3,9 @@ import PageHeader from '../components/shared/PageHeader';
 import SectionReveal from '../components/shared/SectionReveal';
 import { Heart, Eye, Users } from 'lucide-react';
 
-const aboutHero = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/5bacfe924_generated_559131c1.png';
-const foundersImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/db4f3b857_generated_6799216e.png';
+const aboutHero = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/b9de115e3_Screenshot2026-05-20at10320PM.png';
+const rebeccaImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/b9de115e3_Screenshot2026-05-20at10320PM.png';
+const bryanImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/6704075b6_Screenshot2026-05-20at10140PM.png';
 
 const departments = [
   {
@@ -73,7 +74,10 @@ export default function About() {
       <section className="py-24 px-4 bg-white">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <SectionReveal>
-            <img src={foundersImage} alt="Rebecca & Bryan Siewin" className="w-full rounded-lg shadow-xl" />
+            <div className="grid grid-cols-2 gap-4">
+              <img src={rebeccaImage} alt="Rebecca Siewin" className="w-full h-80 object-cover object-top rounded-lg shadow-xl" />
+              <img src={bryanImage} alt="Bryan Siewin" className="w-full h-80 object-cover object-top rounded-lg shadow-xl mt-8" />
+            </div>
           </SectionReveal>
           <SectionReveal delay={0.2}>
             <p className="font-body text-gold text-xs tracking-[0.3em] uppercase mb-3">The Founders</p>
@@ -105,8 +109,14 @@ export default function About() {
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                   {dept.members.map(member => (
                     <div key={member.name} className="text-center group">
-                      <div className="w-20 h-20 mx-auto mb-3 rounded-full bg-warm-gray flex items-center justify-center text-2xl font-heading text-gold/70 group-hover:bg-gold/10 transition-colors">
-                        {member.name.split(' ').map(n => n[0]).join('')}
+                      <div className="w-24 h-24 mx-auto mb-3 rounded-full bg-warm-gray overflow-hidden flex items-center justify-center group-hover:ring-2 group-hover:ring-gold/40 transition-all">
+                        {member.headshot ? (
+                          <img src={member.headshot} alt={member.name} className="w-full h-full object-cover object-top" />
+                        ) : (
+                          <span className="text-2xl font-heading text-gold/70">
+                            {member.name.split(' ').map(n => n[0]).join('')}
+                          </span>
+                        )}
                       </div>
                       <p className="font-body text-sm font-medium text-foreground">{member.name}</p>
                       <p className="font-body text-xs text-muted-foreground mt-1">{member.title}</p>
