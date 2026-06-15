@@ -62,14 +62,6 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="ml-4 flex items-center gap-3">
-              <Link
-                to="/portal"
-                className={`text-[13px] tracking-wide font-body transition-colors ${
-                  showSolid ? 'text-muted-foreground hover:text-foreground' : 'text-white/60 hover:text-white'
-                }`}
-              >
-                Client Login
-              </Link>
               <Link to="/contact">
                 <Button size="sm" className="bg-gold hover:bg-gold/90 text-white font-body text-xs tracking-wider px-5">
                   START YOUR PROJECT
@@ -106,9 +98,6 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="pt-4 border-t border-border mt-4 space-y-3">
-              <Link to="/portal" className="block px-4 py-2 text-sm text-muted-foreground font-body">
-                Client Login
-              </Link>
               <Link to="/contact" className="block px-4">
                 <Button className="w-full bg-gold hover:bg-gold/90 text-white font-body text-xs tracking-wider">
                   START YOUR PROJECT

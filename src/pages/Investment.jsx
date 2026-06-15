@@ -94,9 +94,9 @@ export default function Investment() {
           <SectionReveal>
             <div className="text-center mt-16">
               <p className="font-body text-muted-foreground text-sm mb-2">For billing questions, contact:</p>
-              <p className="font-heading text-xl text-foreground">Bojana Sabic</p>
-              <a href="mailto:bojana@dreamhome.design" className="font-body text-gold text-sm hover:underline">
-                bojana@dreamhome.design
+              <p className="font-heading text-xl text-foreground">Amanda</p>
+              <a href="mailto:amanda@dreamhome.design" className="font-body text-gold text-sm hover:underline">
+                amanda@dreamhome.design
               </a>
               <div className="mt-8">
                 <Link to="/contact">
