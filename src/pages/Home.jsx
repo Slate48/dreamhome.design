@@ -12,14 +12,14 @@ const rebeccaImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9eb
 const bryanImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/6704075b6_Screenshot2026-05-20at10140PM.png';
 
 const portfolioImages = [
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/ae20c57b9_DR0A9183-topaz-denoise-sharpen-lighting-color-upscale-2x.jpg', label: 'Modern Kitchen' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/517b44a0d_1P9A0041.jpg', label: 'Elegant Bathroom Vanity' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/65be1340d_78.jpg', label: 'Custom Home Bar' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/17a3c89d4_1P9A0053copy.jpg', label: 'Walk-in Closet' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/e914f00ad_DR0A9154-topaz-sharpen-denoise-lighting-lighting.jpg', label: 'Designer Pantry' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/783cb5f09_52.jpg', label: 'Custom Home Office' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/0870165b6__29A8276.jpg', label: 'Custom Wine Bar' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/511dc41fa_1P9A0048.jpg', label: 'Custom Walk-in Closet' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/45f90e874_16-web-or-mls-NEchoCanyonCir-L0202-023.jpg', label: 'Light Oak Modern Kitchen' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/9440f8e86_1P9A00531.jpg', label: 'Warm Oak Walk-In Closet' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/37dfe2217_13-web-or-mls-NEchoCanyonCir-L0202-006.jpg', label: 'Glass Wine Cellar' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/09c0d3634_16-web-or-mls-D46A5590copy.jpg', label: 'Dual Vanity Master Bath' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/5a990b194_19-web-or-mls-D46A5616copy.jpg', label: 'Marble Waterfall Kitchen' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/533bb5400_17-web-or-mls-D46A5600copy.jpg', label: 'Luxury Walk-In Closet' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/5c9db5db3_14-web-or-mls-NEchoCanyonCir-L0202-070.jpg', label: 'Wine Cellar Detail' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/91ce221a4_19-web-or-mls-NEchoCanyonCir-L0202-025.jpg', label: 'Kitchen Faucet Detail' },
 ];
 
 const instaImages = [
