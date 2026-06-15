@@ -9,11 +9,11 @@ import SectionReveal from '../components/shared/SectionReveal';
 const categories = ['All', 'Kitchens', 'Bathrooms', 'Closets', 'Home Bars', 'Pantries', 'Custom Millwork'];
 
 const portfolioItems = [
-  { title: 'Modern Walnut Kitchen', category: 'Kitchens', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/525cf1a40_generated_f39324c2.png', desc: 'A stunning walnut kitchen with waterfall island and brushed gold accents.' },
-  { title: 'Elegant Master Bath', category: 'Bathrooms', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/b397ccb5a_generated_11790ae1.png', desc: 'White oak vanity with marble countertop and gold fixtures.' },
-  { title: 'Gentleman\'s Home Bar', category: 'Home Bars', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/c49bb3d3d_generated_56d29da3.png', desc: 'Dark charcoal cabinetry with floating shelves and wine storage.' },
-  { title: 'Custom Walk-in Closet', category: 'Closets', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/979f9e117_generated_9a7831d4.png', desc: 'Floor-to-ceiling built-ins with island and integrated lighting.' },
-  { title: 'Designer Pantry', category: 'Pantries', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/439913dd9_generated_0a51d658.png', desc: 'Custom pantry with pull-out drawers and glass-front cabinets.' },
+  { title: 'Navy Classic Home Bar', category: 'Home Bars', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/2084fc71d_78.jpg', desc: 'Bold navy blue built-in bar with walnut shelving, mirrored back panel, glass storage, and curved marble counter.' },
+  { title: 'Onyx Powder Room', category: 'Bathrooms', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/28117953a_410A1466.jpg', desc: 'Dramatic backlit onyx floating vanity with brass fixtures, pendant lighting, and warm copper wall panel.' },
+  { title: 'Cream LED Walk-In Closet', category: 'Closets', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/9b4f49807_46-web-or-mls-NEchoCanyonCir-L0202-060.jpg', desc: 'Symmetrical cream walk-in closet with LED cove lighting, integrated brass hardware, and clerestory window.' },
+  { title: 'Oak Dressing Room', category: 'Bathrooms', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/154d9d047_48-web-or-mls-NEchoCanyonCir-L0202-0621.jpg', desc: 'Light oak his-and-hers dressing room connecting to a walk-in closet with stone countertops and brass accents.' },
+  { title: 'Wraparound Oak Vanity', category: 'Bathrooms', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/759020228_56-web-or-mls-NEchoCanyonCir-L0202-045.jpg', desc: 'Custom wraparound oak vanity with marble countertop, grasscloth walls, glass-front upper cabinets, and open shelving.' },
   { title: 'Custom Master Suite Headboard', category: 'Custom Millwork', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/f8a563657_40-web-or-mls-NEchoCanyonCir-L0202-053.jpg', desc: 'Custom oak headboard wall panel with integrated lighting, floating nightstands, and adjacent display shelving.' },
   { title: 'Open Plan Dining & Kitchen', category: 'Custom Millwork', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/bf58fe90d_30-web-or-mls-NEchoCanyonCir-L0202-018.jpg', desc: 'Indoor-outdoor desert living with custom millwork, warm oak kitchen cabinetry, and designer lighting.' },
   { title: 'Panel-Ready Kitchen Suite', category: 'Kitchens', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/affeb8388_20-web-or-mls-NEchoCanyonCir-L0202-026.jpg', desc: 'Seamlessly integrated panel-ready refrigerator, open oak shelving, and stone countertops.' },
@@ -34,8 +34,10 @@ const portfolioItems = [
   { title: 'Kitchen Faucet Detail', category: 'Kitchens', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/91ce221a4_19-web-or-mls-NEchoCanyonCir-L0202-025.jpg', desc: 'Artisan detail shot: rose gold faucet, stone backsplash, and fluted oak upper cabinets with under-cabinet lighting.' },
   { title: 'Taupe Pantry with LED Shelving', category: 'Pantries', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/756413347_22-web-or-mls-NEchoCanyonCir-L0202-066.jpg', desc: 'Custom pantry with taupe upper cabinets, LED-lit open shelving, and warm oak lower cabinetry.' },
   { title: 'Open Concept Great Room', category: 'Custom Millwork', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/95c140412_18-web-or-mls-D46A5603copy.jpg', desc: 'Open-plan living space with custom illuminated display shelving, wood beam ceiling accents, and seamless indoor-outdoor flow.' },
-  { title: '', category: 'Pantries', image: null, desc: '' },
-  { title: '', category: 'Closets', image: null, desc: '' },
+  { title: 'Dark Walnut Built-In Shelving', category: 'Custom Millwork', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/373feccbe_591.jpg', desc: 'Dark walnut full-wall built-in with slatted lower cabinet doors, open display shelving, and upper storage.' },
+  { title: 'Office with Mountain View', category: 'Custom Millwork', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/43a15ab90_59-web-or-mls-NEchoCanyonCir-L0202-016.jpg', desc: 'Custom home office cabinetry with integrated bar service area, overlooking panoramic mountain views.' },
+  { title: 'Camelback View Sitting Room', category: 'Custom Millwork', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/bc785c3b5_62-web-or-mls-NEchoCanyonCir-L0202-017.jpg', desc: 'Custom millwork sitting room with floor-to-ceiling glass overlooking Camelback Mountain and integrated wet bar.' },
+  { title: 'Travertine Spa Shower', category: 'Bathrooms', image: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/175087e57_45-web-or-mls-NEchoCanyonCir-L0202-058.jpg', desc: 'Spa-inspired wet room with travertine slab walls, open walk-in shower bench, and matte bronze fixtures.' },
 ];
 
 export default function Portfolio() {
@@ -52,7 +54,7 @@ export default function Portfolio() {
       <PageHeader
         title="Our Portfolio"
         subtitle="A curated collection of our finest work"
-        imageUrl="https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/525cf1a40_generated_f39324c2.png"
+        imageUrl="https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/bc785c3b5_62-web-or-mls-NEchoCanyonCir-L0202-017.jpg"
       />
 
       <section className="py-16 px-4 bg-white">

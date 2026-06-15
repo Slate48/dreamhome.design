@@ -3,7 +3,7 @@ import PageHeader from '../components/shared/PageHeader';
 import SectionReveal from '../components/shared/SectionReveal';
 import { Clock } from 'lucide-react';
 
-const processHero = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/3b0ab420b_generated_3a49d52d.png';
+const processHero = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/175087e57_45-web-or-mls-NEchoCanyonCir-L0202-058.jpg';
 
 const stages = [
   {
