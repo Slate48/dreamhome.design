@@ -3,7 +3,7 @@ import PageHeader from '../components/shared/PageHeader';
 import SectionReveal from '../components/shared/SectionReveal';
 import { Heart, Eye, Users } from 'lucide-react';
 
-const aboutHero = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/c8daaae57_41-web-or-mls-D46A5778.jpg';
+const aboutHero = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/920e96a43_Screenshot2026-04-22094325.jpg';
 const rebeccaImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/b9de115e3_Screenshot2026-05-20at10320PM.png';
 const bryanImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/6704075b6_Screenshot2026-05-20at10140PM.png';
 
