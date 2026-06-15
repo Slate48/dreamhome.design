@@ -12,14 +12,14 @@ const rebeccaImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9eb
 const bryanImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/6704075b6_Screenshot2026-05-20at10140PM.png';
 
 const portfolioImages = [
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/45f90e874_16-web-or-mls-NEchoCanyonCir-L0202-023.jpg', label: 'Light Oak Modern Kitchen' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/4b8c8d727_21-web-or-mls-D46A5632copy.jpg', label: 'White & Walnut Open Kitchen' },
   { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/9440f8e86_1P9A00531.jpg', label: 'Warm Oak Walk-In Closet' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/37dfe2217_13-web-or-mls-NEchoCanyonCir-L0202-006.jpg', label: 'Glass Wine Cellar' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/fa50ca46f_26-web-or-mls-D46A5666copy.jpg', label: 'Slate Home Bar' },
   { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/09c0d3634_16-web-or-mls-D46A5590copy.jpg', label: 'Dual Vanity Master Bath' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/5a990b194_19-web-or-mls-D46A5616copy.jpg', label: 'Marble Waterfall Kitchen' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/533bb5400_17-web-or-mls-D46A5600copy.jpg', label: 'Luxury Walk-In Closet' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/5c9db5db3_14-web-or-mls-NEchoCanyonCir-L0202-070.jpg', label: 'Wine Cellar Detail' },
-  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/91ce221a4_19-web-or-mls-NEchoCanyonCir-L0202-025.jpg', label: 'Kitchen Faucet Detail' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/f4394c377_36.jpg', label: 'Dark Oak Statement Kitchen' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/f8a563657_40-web-or-mls-NEchoCanyonCir-L0202-053.jpg', label: 'Custom Master Suite' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/756413347_22-web-or-mls-NEchoCanyonCir-L0202-066.jpg', label: 'Taupe Pantry with LED Shelving' },
+  { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/3946660a4_29-web-or-mls-NEchoCanyonCir-L0202-030.jpg', label: 'Light Oak Wet Bar' },
 ];
 
 const instaImages = [
