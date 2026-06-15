@@ -1,18 +1,43 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import HTMLFlipBook from 'react-pageflip';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import SectionReveal from '../shared/SectionReveal';
 
-// Placeholder slots — replace src values with real photo URLs when available
+// Replace null values with real photo URLs when available
 const photos = Array.from({ length: 15 }, (_, i) => ({
   id: i + 1,
   src: null,
   alt: `Feature photo ${i + 1}`,
 }));
 
+const Page = React.forwardRef(({ photo }, ref) => (
+  <div ref={ref} className="bg-warm-gray overflow-hidden">
+    {photo.src ? (
+      <img
+        src={photo.src}
+        alt={photo.alt}
+        className="w-full h-full object-cover"
+      />
+    ) : (
+      <div className="w-full h-full flex items-center justify-center">
+        <span className="font-body text-sm text-muted-foreground tracking-wider">{photo.alt}</span>
+      </div>
+    )}
+  </div>
+));
+
+Page.displayName = 'Page';
+
 export default function MagazineFeature() {
-  const [lightbox, setLightbox] = useState(null);
+  const bookRef = useRef(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const totalPages = photos.length;
+
+  const prevPage = () => bookRef.current?.pageFlip().flipPrev();
+  const nextPage = () => bookRef.current?.pageFlip().flipNext();
 
   return (
-    <section className="py-24 px-4 bg-white">
+    <section className="py-24 px-4 bg-white overflow-hidden">
       <div className="max-w-6xl mx-auto">
         <SectionReveal>
           <div className="text-center mb-14">
@@ -21,42 +46,59 @@ export default function MagazineFeature() {
           </div>
         </SectionReveal>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {photos.map((photo, i) => (
-            <SectionReveal key={photo.id} delay={i * 0.04}>
-              <div
-                className="aspect-square bg-warm-gray rounded-lg overflow-hidden cursor-pointer group relative"
-                onClick={() => photo.src && setLightbox(photo)}
+        <SectionReveal>
+          <div className="flex flex-col items-center gap-8">
+            <div className="w-full flex justify-center">
+              <HTMLFlipBook
+                ref={bookRef}
+                width={380}
+                height={500}
+                size="fixed"
+                minWidth={220}
+                maxWidth={500}
+                minHeight={300}
+                maxHeight={650}
+                showCover={false}
+                mobileScrollSupport={true}
+                onFlip={(e) => setCurrentPage(e.data)}
+                className="shadow-2xl"
+                style={{}}
+                startPage={0}
+                drawShadow={true}
+                flippingTime={700}
+                usePortrait={true}
+                startZIndex={0}
+                autoSize={true}
+                maxShadowOpacity={0.4}
+                showPageCorners={true}
+                disableFlipByClick={false}
               >
-                {photo.src ? (
-                  <img
-                    src={photo.src}
-                    alt={photo.alt}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="font-body text-xs text-muted-foreground tracking-wider">Photo {photo.id}</span>
-                  </div>
-                )}
-              </div>
-            </SectionReveal>
-          ))}
-        </div>
+                {photos.map((photo) => (
+                  <Page key={photo.id} photo={photo} />
+                ))}
+              </HTMLFlipBook>
+            </div>
 
-        {/* Lightbox */}
-        {lightbox && (
-          <div
-            className="fixed inset-0 bg-charcoal/90 z-50 flex items-center justify-center p-4"
-            onClick={() => setLightbox(null)}
-          >
-            <img
-              src={lightbox.src}
-              alt={lightbox.alt}
-              className="max-w-4xl max-h-[90vh] w-full object-contain rounded-lg shadow-2xl"
-            />
+            {/* Controls */}
+            <div className="flex items-center gap-6">
+              <button
+                onClick={prevPage}
+                className="w-10 h-10 rounded-full border border-gold/30 flex items-center justify-center text-gold hover:bg-gold/10 transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <span className="font-body text-sm text-muted-foreground tracking-wider">
+                {currentPage + 1} / {totalPages}
+              </span>
+              <button
+                onClick={nextPage}
+                className="w-10 h-10 rounded-full border border-gold/30 flex items-center justify-center text-gold hover:bg-gold/10 transition-colors"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-        )}
+        </SectionReveal>
       </div>
     </section>
   );
