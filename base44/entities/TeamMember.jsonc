@@ -8,15 +8,21 @@
     "title": {
       "type": "string"
     },
+    "show_title": {
+      "type": "boolean",
+      "default": true
+    },
     "department": {
       "type": "string",
       "enum": [
+        "Founders",
+        "Management",
         "Design",
-        "Sales & Admin",
-        "Operations",
-        "Engineering & Production",
-        "Countertop Fabrication",
-        "Founders"
+        "Sales",
+        "Engineering",
+        "Countertop",
+        "Estimating",
+        "Project Management"
       ]
     },
     "photo_url": {
@@ -36,7 +42,6 @@
   },
   "required": [
     "name",
-    "title",
     "department"
   ]
 }

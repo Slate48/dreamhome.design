@@ -12,7 +12,7 @@ const values = [
   { icon: Users, title: 'Partnership', desc: 'Your project is a collaboration. We listen deeply, design thoughtfully, and build with the care we\'d give our own homes. Your vision drives every decision we make.' },
 ];
 
-const DEPT_ORDER = ['Design', 'Sales & Admin', 'Operations', 'Engineering & Production', 'Countertop Fabrication'];
+const DEPT_ORDER = ['Management', 'Design', 'Sales', 'Engineering', 'Countertop', 'Estimating', 'Project Management'];
 
 export default function About() {
   const [teamMembers, setTeamMembers] = useState([]);
@@ -102,7 +102,9 @@ export default function About() {
                         }
                       </div>
                       <p className="font-body text-sm font-medium text-foreground">{member.name}</p>
-                      <p className="font-body text-xs text-muted-foreground mt-1">{member.title}</p>
+                      {member.show_title !== false && member.title && (
+                        <p className="font-body text-xs text-muted-foreground mt-1">{member.title}</p>
+                      )}
                     </div>
                   ))}
                 </div>

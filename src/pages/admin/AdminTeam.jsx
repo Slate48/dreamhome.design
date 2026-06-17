@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 
-const DEPARTMENTS = ['Founders', 'Design', 'Sales & Admin', 'Operations', 'Engineering & Production', 'Countertop Fabrication'];
-const BLANK = { name: '', title: '', department: 'Design', photo_url: '', bio: '', is_founder: false, sort_order: 0 };
+const DEPARTMENTS = ['Founders', 'Management', 'Design', 'Sales', 'Engineering', 'Countertop', 'Estimating', 'Project Management'];
+const BLANK = { name: '', title: '', show_title: true, department: 'Design', photo_url: '', bio: '', is_founder: false, sort_order: 0 };
 
 export default function AdminTeam() {
   const { toast } = useToast();
@@ -149,6 +149,10 @@ export default function AdminTeam() {
               <div>
                 <Label className="text-xs font-body">Bio (optional)</Label>
                 <Input value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} className="mt-1" />
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="show_title" checked={form.show_title !== false} onChange={e => setForm(f => ({ ...f, show_title: e.target.checked }))} />
+                <Label htmlFor="show_title" className="text-xs font-body cursor-pointer">Show title on About page</Label>
               </div>
               <div className="flex items-center gap-2">
                 <input type="checkbox" id="founder" checked={form.is_founder} onChange={e => setForm(f => ({ ...f, is_founder: e.target.checked }))} />
