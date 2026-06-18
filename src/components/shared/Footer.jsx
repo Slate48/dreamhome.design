@@ -8,7 +8,7 @@ import { useSiteSettings } from '@/hooks/useSiteSettings';
 export default function Footer() {
   const settings = useSiteSettings();
 
-  const phone = settings?.phone_display || '877-343-CABS';
+  const phone = settings?.phone_display || '(877) 343-2227';
   const phoneHref = settings?.phone || '8773432227';
   const emailSales = settings?.email_sales || 'sales@dreamhome.design';
   const location = [settings?.address, settings?.city_state].filter(Boolean).join(', ') || 'Arizona';
@@ -33,7 +33,7 @@ export default function Footer() {
               </Button>
             </Link>
             <a href={`tel:${phoneHref}`} className="text-white/70 hover:text-white font-body text-sm tracking-wide transition-colors">
-              {phone}
+              {phone} <span className="opacity-60 text-xs">(877) DHD-CABS</span>
             </a>
           </div>
         </div>
@@ -71,7 +71,7 @@ export default function Footer() {
                 <Mail className="w-4 h-4" /> {emailSales}
               </a>
               <a href={`tel:${phoneHref}`} className="flex items-center gap-2 text-white/40 hover:text-gold text-sm font-body transition-colors">
-                <Phone className="w-4 h-4" /> {phone}
+                <Phone className="w-4 h-4" /> {phone} <span className="text-xs opacity-60">(877) DHD-CABS</span>
               </a>
               <div className="flex items-center gap-2 text-white/40 text-sm font-body">
                 <MapPin className="w-4 h-4" /> {location}

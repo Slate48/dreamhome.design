@@ -33,7 +33,7 @@ export default function Contact() {
     setLoading(false);
   };
 
-  const phone = settings?.phone_display || '877-343-CABS';
+  const phone = settings?.phone_display || '(877) 343-2227';
   const phoneHref = settings?.phone || '8773432227';
   const emailSales = settings?.email_sales || 'sales@dreamhome.design';
   const websiteUrl = settings?.website_url || 'https://www.dreamhome.design';
@@ -111,7 +111,7 @@ export default function Contact() {
                     <Mail className="w-5 h-5 text-gold" /> {emailSales}
                   </a>
                   <a href={`tel:${phoneHref}`} className="flex items-center gap-3 text-foreground hover:text-gold font-body text-sm transition-colors">
-                    <Phone className="w-5 h-5 text-gold" /> {phone}
+                     <Phone className="w-5 h-5 text-gold" /> {phone} <span className="text-xs text-muted-foreground">(877) DHD-CABS</span>
                   </a>
                   <a href={websiteUrl} className="flex items-center gap-3 text-foreground hover:text-gold font-body text-sm transition-colors">
                     <Globe className="w-5 h-5 text-gold" /> {websiteUrl.replace('https://', '')}
