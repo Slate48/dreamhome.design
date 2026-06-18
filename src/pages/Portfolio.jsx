@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, LayoutGrid, BookOpen } from 'lucide-react';
 import PageHeader from '../components/shared/PageHeader';
 import SectionReveal from '../components/shared/SectionReveal';
+import PortfolioFlipbook from '../components/portfolio/PortfolioFlipbook';
 
 const CATEGORIES = ['All', 'Kitchens', 'Bathrooms', 'Closets', 'Home Bars', 'Pantries', 'Custom Millwork'];
 
@@ -30,6 +31,7 @@ export default function Portfolio() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [items, setItems] = useState([]);
   const [loaded, setLoaded] = useState(false);
+  const [viewMode, setViewMode] = useState('grid');
 
   useEffect(() => {
     base44.entities.PortfolioItem.list('sort_order', 200).then(data => {
@@ -54,6 +56,41 @@ export default function Portfolio() {
 
       <section className="py-16 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
+
+          {/* View toggle */}
+          <SectionReveal>
+            <div className="flex justify-center mb-8">
+              <div className="inline-flex rounded-full border border-gold/30 p-1 gap-1 bg-warm-gray/40">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-full font-body text-sm transition-all ${
+                    viewMode === 'grid' ? 'bg-gold text-white shadow' : 'text-muted-foreground hover:text-gold'
+                  }`}
+                >
+                  <LayoutGrid className="w-4 h-4" /> Gallery
+                </button>
+                <button
+                  onClick={() => setViewMode('flipbook')}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-full font-body text-sm transition-all ${
+                    viewMode === 'flipbook' ? 'bg-gold text-white shadow' : 'text-muted-foreground hover:text-gold'
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4" /> Lookbook
+                </button>
+              </div>
+            </div>
+          </SectionReveal>
+
+          {/* Lookbook view */}
+          {viewMode === 'flipbook' && (
+            <SectionReveal>
+              <PortfolioFlipbook allItems={displayItems} />
+            </SectionReveal>
+          )}
+
+          {/* Grid view */}
+          {viewMode === 'grid' && (
+          <>
           {/* Filter tabs */}
           <SectionReveal>
             <div className="flex flex-wrap justify-center gap-2 mb-12">
@@ -100,6 +137,8 @@ export default function Portfolio() {
           </div>
 
           {/* CTA */}
+          </>
+          )}
           <SectionReveal>
             <div className="text-center mt-16 p-12 bg-cream rounded-xl">
               <h3 className="font-heading text-2xl md:text-3xl text-foreground mb-3">Love what you see?</h3>

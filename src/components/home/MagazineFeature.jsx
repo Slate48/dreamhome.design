@@ -25,9 +25,28 @@ FlipPage.displayName = 'FlipPage';
 
 export default function MagazineFeature() {
   const bookRef = useRef(null);
+  const containerRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageImages, setPageImages] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
+  const [bookDims, setBookDims] = useState({ width: 850, height: 616, key: 0 });
+
+  // Responsive sizing
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const compute = () => {
+      const available = el.offsetWidth;
+      // Two pages side by side; each page is half the container
+      const pageW = Math.max(160, Math.min(Math.floor(available / 2) - 8, 850));
+      const pageH = Math.round(pageW * (616 / 850));
+      setBookDims(prev => ({ width: pageW, height: pageH, key: prev.key + 1 }));
+    };
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     async function loadPDF() {
@@ -65,28 +84,23 @@ export default function MagazineFeature() {
         </SectionReveal>
 
         <SectionReveal>
-          <div className="flex flex-col items-center gap-8">
+          <div ref={containerRef} className="flex flex-col items-center gap-8 w-full">
             {totalPages > 0 && (
-              <div className="w-full flex justify-center">
+              <div className="w-full flex justify-center overflow-hidden">
                 <HTMLFlipBook
+                  key={bookDims.key}
                   ref={bookRef}
-                  width={850}
-                  height={616}
+                  width={bookDims.width}
+                  height={bookDims.height}
                   size="fixed"
-                  minWidth={320}
-                  maxWidth={950}
-                  minHeight={230}
-                  maxHeight={690}
                   showCover={true}
                   mobileScrollSupport={true}
                   onFlip={(e) => setCurrentPage(e.data)}
                   className="shadow-2xl"
-                  style={{}}
                   startPage={0}
                   drawShadow={true}
                   flippingTime={700}
                   usePortrait={false}
-                  autoSize={true}
                   maxShadowOpacity={0.5}
                   showPageCorners={true}
                   disableFlipByClick={false}
