@@ -31,7 +31,7 @@ export default function Portfolio() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [items, setItems] = useState([]);
   const [loaded, setLoaded] = useState(false);
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState('flipbook');
 
   useEffect(() => {
     base44.entities.PortfolioItem.list('sort_order', 200).then(data => {
@@ -62,20 +62,20 @@ export default function Portfolio() {
             <div className="flex justify-center mb-8">
               <div className="inline-flex rounded-full border border-gold/30 p-1 gap-1 bg-warm-gray/40">
                 <button
-                  onClick={() => setViewMode('grid')}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-full font-body text-sm transition-all ${
-                    viewMode === 'grid' ? 'bg-gold text-white shadow' : 'text-muted-foreground hover:text-gold'
-                  }`}
-                >
-                  <LayoutGrid className="w-4 h-4" /> Gallery
-                </button>
-                <button
                   onClick={() => setViewMode('flipbook')}
                   className={`flex items-center gap-2 px-5 py-2 rounded-full font-body text-sm transition-all ${
                     viewMode === 'flipbook' ? 'bg-gold text-white shadow' : 'text-muted-foreground hover:text-gold'
                   }`}
                 >
                   <BookOpen className="w-4 h-4" /> Lookbook
+                </button>
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-full font-body text-sm transition-all ${
+                    viewMode === 'grid' ? 'bg-gold text-white shadow' : 'text-muted-foreground hover:text-gold'
+                  }`}
+                >
+                  <LayoutGrid className="w-4 h-4" /> Gallery
                 </button>
               </div>
             </div>

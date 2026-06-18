@@ -85,15 +85,7 @@ export default function Investment() {
             </div>
           </SectionReveal>
 
-          <SectionReveal>
-            <div className="mt-20">
-              <div className="text-center mb-10">
-                <p className="font-body text-gold text-xs tracking-[0.3em] uppercase mb-3">Dream Home Design</p>
-                <h2 className="font-heading text-3xl md:text-4xl text-foreground">Client Onboarding Handbook</h2>
-              </div>
-              <MagazineFeature />
-            </div>
-          </SectionReveal>
+          <MagazineFeature />
 
           <SectionReveal>
             <div className="text-center mt-16">

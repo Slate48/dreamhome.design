@@ -84,7 +84,7 @@ export default function MagazineFeature() {
         </SectionReveal>
 
         <SectionReveal>
-          <div ref={containerRef} className="flex flex-col items-center gap-8 w-full">
+          <div ref={containerRef} className="flex flex-col items-center gap-8 w-full pb-6">
             {totalPages > 0 && (
               <div className="w-full flex justify-center overflow-hidden">
                 <HTMLFlipBook
