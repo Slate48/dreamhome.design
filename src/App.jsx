@@ -6,6 +6,8 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
+import RoleGuard from './components/RoleGuard';
+
 // Admin pages
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -75,8 +77,12 @@ const AuthenticatedApp = () => {
         <Route path="/contact" element={<Contact />} />
       </Route>
 
-      {/* Client portal */}
-      <Route element={<PortalLayout />}>
+      {/* Client portal — clients only */}
+      <Route element={
+        <RoleGuard allowedRoles={['client']} redirectTo="/">
+          <PortalLayout />
+        </RoleGuard>
+      }>
         <Route path="/portal" element={<Dashboard />} />
         <Route path="/portal/project" element={<MyProject />} />
         <Route path="/portal/documents" element={<Documents />} />
@@ -86,15 +92,24 @@ const AuthenticatedApp = () => {
         <Route path="/portal/help" element={<Help />} />
       </Route>
 
-      {/* Admin portal */}
-      <Route element={<AdminLayout />}>
+      {/* Admin portal — manager / admin / super_admin */}
+      <Route element={
+        <RoleGuard allowedRoles={['manager', 'admin', 'super_admin']} redirectTo="/">
+          <AdminLayout />
+        </RoleGuard>
+      }>
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/portfolio" element={<AdminPortfolio />} />
         <Route path="/admin/team" element={<AdminTeam />} />
         <Route path="/admin/faqs" element={<AdminFAQs />} />
         <Route path="/admin/process" element={<AdminProcess />} />
         <Route path="/admin/investment" element={<AdminInvestment />} />
-        <Route path="/admin/settings" element={<AdminSettings />} />
+        {/* Settings restricted to admin + super_admin only */}
+        <Route path="/admin/settings" element={
+          <RoleGuard allowedRoles={['admin', 'super_admin']} redirectTo="/admin">
+            <AdminSettings />
+          </RoleGuard>
+        } />
         <Route path="/admin/testimonials" element={<AdminTestimonials />} />
       </Route>
 

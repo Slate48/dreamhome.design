@@ -5,6 +5,7 @@ import {
   Settings, Image, Menu, X, LogOut, ChevronRight, Star
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 
 const navItems = [
   { label: 'Dashboard', path: '/admin', icon: LayoutGrid },
@@ -17,9 +18,16 @@ const navItems = [
   { label: 'Site Settings', path: '/admin/settings', icon: Settings },
 ];
 
+const ROLE_LABELS = {
+  manager: 'Manager',
+  admin: 'Admin',
+  super_admin: 'Super Admin',
+};
+
 export default function AdminLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -57,7 +65,15 @@ export default function AdminLayout() {
           })}
         </nav>
 
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-white/10 space-y-2">
+          {user && (
+            <div className="px-4 py-2">
+              <p className="text-white/70 font-body text-sm truncate">{user.full_name}</p>
+              <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-gold/20 text-gold font-body text-xs">
+                {ROLE_LABELS[user.role] || user.role}
+              </span>
+            </div>
+          )}
           <button
             onClick={() => base44.auth.logout('/')}
             className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-white/40 hover:text-white hover:bg-white/5 font-body text-sm transition-colors"

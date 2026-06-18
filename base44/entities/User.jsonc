@@ -5,11 +5,13 @@
     "role": {
       "type": "string",
       "enum": [
+        "client",
+        "manager",
         "admin",
-        "user"
+        "super_admin"
       ],
-      "default": "user",
-      "description": "admin = DHD staff, user = client"
+      "default": "client",
+      "description": "User role: client (portal access only), manager (admin portal read/manage), admin (full admin access), super_admin (full access + user management)"
     }
   }
 }
