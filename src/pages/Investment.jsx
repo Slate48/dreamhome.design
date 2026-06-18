@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
 import PageHeader from '../components/shared/PageHeader';
 import SectionReveal from '../components/shared/SectionReveal';
+import MagazineFeature from '../components/home/MagazineFeature';
 
 const ICONS = [FileText, Building, CreditCard];
 
@@ -81,6 +82,16 @@ export default function Investment() {
                 <Info className="w-5 h-5 text-gold shrink-0 mt-0.5" />
                 <p className="font-body text-white/50 text-sm">{scopeNote}</p>
               </div>
+            </div>
+          </SectionReveal>
+
+          <SectionReveal>
+            <div className="mt-20">
+              <div className="text-center mb-10">
+                <p className="font-body text-gold text-xs tracking-[0.3em] uppercase mb-3">Dream Home Design</p>
+                <h2 className="font-heading text-3xl md:text-4xl text-foreground">Client Onboarding Handbook</h2>
+              </div>
+              <MagazineFeature />
             </div>
           </SectionReveal>
 
