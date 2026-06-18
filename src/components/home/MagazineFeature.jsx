@@ -38,7 +38,7 @@ export default function MagazineFeature() {
 
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
-        const viewport = page.getViewport({ scale: 1.8 });
+        const viewport = page.getViewport({ scale: 2.5 });
         const canvas = document.createElement('canvas');
         canvas.width = viewport.width;
         canvas.height = viewport.height;
@@ -56,7 +56,7 @@ export default function MagazineFeature() {
 
   return (
     <section className="py-24 px-4 bg-white overflow-hidden">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-[1920px] mx-auto">
         <SectionReveal>
           <div className="text-center mb-14">
             <p className="font-body text-gold text-xs tracking-[0.3em] uppercase mb-3">Dream Home Design</p>
@@ -70,13 +70,13 @@ export default function MagazineFeature() {
               <div className="w-full flex justify-center">
                 <HTMLFlipBook
                   ref={bookRef}
-                  width={620}
-                  height={450}
+                  width={850}
+                  height={616}
                   size="fixed"
                   minWidth={320}
-                  maxWidth={700}
+                  maxWidth={950}
                   minHeight={230}
-                  maxHeight={510}
+                  maxHeight={690}
                   showCover={true}
                   mobileScrollSupport={true}
                   onFlip={(e) => setCurrentPage(e.data)}
