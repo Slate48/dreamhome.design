@@ -8,8 +8,8 @@ import MagazineFeature from '../components/home/MagazineFeature';
 import TestimonialsSection from '../components/home/TestimonialsSection';
 import InstagramStrip from '../components/home/InstagramStrip';
 
-const rebeccaImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/b9de115e3_Screenshot2026-05-20at10320PM.png';
-const bryanImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/6704075b6_Screenshot2026-05-20at10140PM.png';
+const rebeccaImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/77b16e3b9_steven-098.jpg';
+const bryanImage = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/afe266c5c_steven-093.jpg';
 
 const portfolioImages = [
   { url: 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/4b8c8d727_21-web-or-mls-D46A5632copy.jpg', label: 'White & Walnut Open Kitchen' },
