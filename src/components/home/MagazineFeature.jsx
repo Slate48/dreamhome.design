@@ -37,8 +37,8 @@ export default function MagazineFeature() {
     if (!el) return;
     const compute = () => {
       const available = el.offsetWidth;
-      // Reserve space for header (~120px), controls (~60px), gaps, and section padding
-      const availableHeight = window.innerHeight - 320;
+      // Reserve space for navbar, header, controls, gaps, and section padding
+      const availableHeight = window.innerHeight - 460;
       // Two pages side by side; each page is half the container
       let pageW = Math.max(160, Math.min(Math.floor(available / 2) - 8, 850));
       let pageH = Math.round(pageW * (616 / 850));
@@ -52,7 +52,9 @@ export default function MagazineFeature() {
     compute();
     const ro = new ResizeObserver(compute);
     ro.observe(el);
-    return () => ro.disconnect();
+    const onResize = () => compute();
+    window.addEventListener('resize', onResize);
+    return () => { ro.disconnect(); window.removeEventListener('resize', onResize); };
   }, []);
 
   useEffect(() => {
