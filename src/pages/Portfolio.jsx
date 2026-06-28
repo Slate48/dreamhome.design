@@ -34,10 +34,15 @@ export default function Portfolio() {
   const [viewMode, setViewMode] = useState('flipbook');
 
   useEffect(() => {
-    base44.entities.PortfolioItem.list('sort_order', 200).then(data => {
-      setItems(data.length > 0 ? data : STATIC_ITEMS);
-      setLoaded(true);
-    });
+    base44.entities.PortfolioItem.list('sort_order', 200)
+      .then(data => {
+        setItems(data.length > 0 ? data : STATIC_ITEMS);
+        setLoaded(true);
+      })
+      .catch(() => {
+        setItems(STATIC_ITEMS);
+        setLoaded(true);
+      });
   }, []);
 
   const displayItems = loaded ? items : STATIC_ITEMS;

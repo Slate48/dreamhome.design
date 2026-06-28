@@ -31,21 +31,29 @@ export default function PortfolioFlipbook({ allItems }) {
 
   const items = allItems.filter(item => item.category === activeCategory && item.image_url);
 
-  // Responsive sizing via ResizeObserver
+  // Responsive sizing via ResizeObserver (debounced to avoid rapid remounts)
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    let timer = null;
     const compute = () => {
-      const available = el.offsetWidth;
-      // Each page: fill half the container, capped at 800px per page
-      const pageW = Math.max(160, Math.min(Math.floor(available / 2) - 8, 800));
-      const pageH = Math.round(pageW * (680 / 520)); // maintain ~3:4 ratio
-      setBookDims(prev => ({ width: pageW, height: pageH, key: prev.key + 1 }));
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        const available = el.offsetWidth;
+        // Each page: fill half the container, capped at 800px per page
+        const pageW = Math.max(160, Math.min(Math.floor(available / 2) - 8, 800));
+        const pageH = Math.round(pageW * (680 / 520)); // maintain ~3:4 ratio
+        setBookDims(prev => {
+          // Only remount if dimensions actually changed
+          if (prev.width === pageW && prev.height === pageH) return prev;
+          return { width: pageW, height: pageH, key: prev.key + 1 };
+        });
+      }, 150);
     };
     compute();
     const ro = new ResizeObserver(compute);
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => { ro.disconnect(); if (timer) clearTimeout(timer); };
   }, []);
 
   const handleCategoryChange = (cat) => {
