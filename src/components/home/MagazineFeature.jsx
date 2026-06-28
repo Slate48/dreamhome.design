@@ -37,9 +37,16 @@ export default function MagazineFeature() {
     if (!el) return;
     const compute = () => {
       const available = el.offsetWidth;
+      // Reserve space for header (~120px), controls (~60px), gaps, and section padding
+      const availableHeight = window.innerHeight - 320;
       // Two pages side by side; each page is half the container
-      const pageW = Math.max(160, Math.min(Math.floor(available / 2) - 8, 850));
-      const pageH = Math.round(pageW * (616 / 850));
+      let pageW = Math.max(160, Math.min(Math.floor(available / 2) - 8, 850));
+      let pageH = Math.round(pageW * (616 / 850));
+      // If the book is too tall for the viewport, scale down to fit
+      if (pageH > availableHeight) {
+        pageH = Math.max(200, availableHeight);
+        pageW = Math.round(pageH * (850 / 616));
+      }
       setBookDims(prev => ({ width: pageW, height: pageH, key: prev.key + 1 }));
     };
     compute();
