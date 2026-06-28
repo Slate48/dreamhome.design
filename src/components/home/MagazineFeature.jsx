@@ -38,14 +38,14 @@ export default function MagazineFeature() {
     const compute = () => {
       const available = el.offsetWidth;
       // Reserve space for navbar, header, controls, gaps, and section padding
-      const availableHeight = window.innerHeight - 460;
-      // Two pages side by side; each page is half the container
-      let pageW = Math.max(160, Math.min(Math.floor(available / 2) - 8, 850));
-      let pageH = Math.round(pageW * (616 / 850));
-      // If the book is too tall for the viewport, scale down to fit
-      if (pageH > availableHeight) {
-        pageH = Math.max(200, availableHeight);
-        pageW = Math.round(pageH * (850 / 616));
+      const availableHeight = Math.max(240, window.innerHeight - 520);
+      // Cap height by viewport first, then derive width
+      let pageH = Math.min(Math.round((Math.min(available / 2 - 8, 850)) * (616 / 850)), availableHeight);
+      let pageW = Math.round(pageH * (850 / 616));
+      // Don't exceed available width
+      if (pageW > available / 2 - 8) {
+        pageW = Math.max(160, Math.floor(available / 2) - 8);
+        pageH = Math.round(pageW * (616 / 850));
       }
       setBookDims(prev => ({ width: pageW, height: pageH, key: prev.key + 1 }));
     };
@@ -95,7 +95,7 @@ export default function MagazineFeature() {
         <SectionReveal>
           <div ref={containerRef} className="flex flex-col items-center gap-8 w-full pb-6">
             {totalPages > 0 && (
-              <div className="w-full flex justify-center overflow-hidden">
+              <div className="w-full flex justify-center overflow-visible mb-10">
                 <HTMLFlipBook
                   key={bookDims.key}
                   ref={bookRef}
