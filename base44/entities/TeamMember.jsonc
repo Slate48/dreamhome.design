@@ -15,14 +15,15 @@
     "department": {
       "type": "string",
       "enum": [
-        "Founders",
-        "Management",
-        "Design",
         "Sales",
-        "Engineering",
-        "Countertop",
+        "Cabinetry",
+        "Design",
         "Estimating",
-        "Project Management"
+        "Engineering",
+        "Project Management",
+        "Countertop",
+        "Management",
+        "Administration"
       ]
     },
     "photo_url": {

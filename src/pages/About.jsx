@@ -12,7 +12,7 @@ const values = [
   { icon: Users, title: 'Partnership', desc: 'Your project is a collaboration. We listen deeply, design thoughtfully, and build with the care we\'d give our own homes. Your vision drives every decision we make.' },
 ];
 
-const DEPT_ORDER = ['Management', 'Design', 'Sales', 'Engineering', 'Countertop', 'Estimating', 'Project Management'];
+const DEPT_ORDER = ['Sales', 'Cabinetry', 'Design', 'Estimating', 'Engineering', 'Project Management', 'Countertop', 'Management', 'Administration'];
 
 export default function About() {
   const [teamMembers, setTeamMembers] = useState([]);
