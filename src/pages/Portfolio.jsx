@@ -128,6 +128,7 @@ export default function Portfolio() {
                       src={item.image_url}
                       alt={item.title}
                       className="w-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      onError={(e) => { e.target.style.opacity = '0.3'; }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                       <div className="absolute bottom-0 left-0 right-0 p-6">

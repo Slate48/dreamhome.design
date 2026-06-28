@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -9,7 +9,12 @@ const FlipPhotoPage = React.forwardRef(({ imageUrl, title }, ref) => (
     <div className="w-full h-full relative">
       {imageUrl ? (
         <>
-          <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+          <img
+            src={imageUrl}
+            alt={title}
+            className="w-full h-full object-cover"
+            onError={(e) => { e.target.style.display = 'none'; }}
+          />
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-charcoal/80 to-transparent p-4">
             <h3 className="font-heading text-white text-sm leading-tight">{title}</h3>
           </div>
@@ -22,6 +27,35 @@ const FlipPhotoPage = React.forwardRef(({ imageUrl, title }, ref) => (
 ));
 FlipPhotoPage.displayName = 'FlipPhotoPage';
 
+// Isolated, memoized flipbook renderer — does NOT re-render when currentPage changes.
+// This prevents React from reconciling children that react-pageflip has moved in the DOM,
+// which was causing the "removeChild" NotFoundError.
+const FlipbookRenderer = React.memo(({ items, bookDims, bookRef, onFlip }) => (
+  <HTMLFlipBook
+    key={bookDims.key}
+    ref={bookRef}
+    width={bookDims.width}
+    height={bookDims.height}
+    size="fixed"
+    showCover={false}
+    mobileScrollSupport={true}
+    onFlip={onFlip}
+    className="shadow-2xl"
+    drawShadow={true}
+    flippingTime={700}
+    usePortrait={false}
+    maxShadowOpacity={0.5}
+    showPageCorners={true}
+    disableFlipByClick={false}
+    startPage={0}
+  >
+    {items.map((item) => (
+      <FlipPhotoPage key={item.id} imageUrl={item.image_url} title={item.title} />
+    ))}
+  </HTMLFlipBook>
+));
+FlipbookRenderer.displayName = 'FlipbookRenderer';
+
 export default function PortfolioFlipbook({ allItems }) {
   const bookRef = useRef(null);
   const containerRef = useRef(null);
@@ -29,7 +63,10 @@ export default function PortfolioFlipbook({ allItems }) {
   const [currentPage, setCurrentPage] = useState(0);
   const [bookDims, setBookDims] = useState({ width: 520, height: 680, key: 0 });
 
-  const items = allItems.filter(item => item.category === activeCategory && item.image_url);
+  const items = useMemo(
+    () => allItems.filter(item => item.category === activeCategory && item.image_url),
+    [allItems, activeCategory]
+  );
 
   // Responsive sizing via ResizeObserver (debounced to avoid rapid remounts)
   useEffect(() => {
@@ -40,11 +77,9 @@ export default function PortfolioFlipbook({ allItems }) {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
         const available = el.offsetWidth;
-        // Each page: fill half the container, capped at 800px per page
         const pageW = Math.max(160, Math.min(Math.floor(available / 2) - 8, 800));
-        const pageH = Math.round(pageW * (680 / 520)); // maintain ~3:4 ratio
+        const pageH = Math.round(pageW * (680 / 520));
         setBookDims(prev => {
-          // Only remount if dimensions actually changed
           if (prev.width === pageW && prev.height === pageH) return prev;
           return { width: pageW, height: pageH, key: prev.key + 1 };
         });
@@ -60,6 +95,8 @@ export default function PortfolioFlipbook({ allItems }) {
     setActiveCategory(cat);
     setCurrentPage(0);
   };
+
+  const onFlip = useCallback((e) => setCurrentPage(e.data), []);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -95,28 +132,12 @@ export default function PortfolioFlipbook({ allItems }) {
         {items.length > 0 ? (
           <>
             <div className="w-full flex justify-center overflow-hidden">
-              <HTMLFlipBook
-                key={`${activeCategory}-${bookDims.key}`}
-                ref={bookRef}
-                width={bookDims.width}
-                height={bookDims.height}
-                size="fixed"
-                showCover={false}
-                mobileScrollSupport={true}
-                onFlip={(e) => setCurrentPage(e.data)}
-                className="shadow-2xl"
-                drawShadow={true}
-                flippingTime={700}
-                usePortrait={false}
-                maxShadowOpacity={0.5}
-                showPageCorners={true}
-                disableFlipByClick={false}
-                startPage={0}
-              >
-                {items.map((item) => (
-                  <FlipPhotoPage key={item.id} imageUrl={item.image_url} title={item.title} />
-                ))}
-              </HTMLFlipBook>
+              <FlipbookRenderer
+                items={items}
+                bookDims={bookDims}
+                bookRef={bookRef}
+                onFlip={onFlip}
+              />
             </div>
 
             <div className="flex items-center gap-6">
