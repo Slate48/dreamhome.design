@@ -13,7 +13,7 @@ const HANDBOOK_PDF_URL = 'https://media.base44.com/files/public/6a0c98b9972c40dc
 const FlipPage = React.forwardRef(({ imageUrl, pageNum }, ref) => (
   <div ref={ref} className="bg-white overflow-hidden">
     {imageUrl ? (
-      <img src={imageUrl} alt={`Page ${pageNum}`} className="w-full h-full object-cover" />
+      <img src={imageUrl} alt={`Page ${pageNum}`} className="w-full h-full object-contain" />
     ) : (
       <div className="w-full h-full flex items-center justify-center bg-warm-gray">
         <div className="w-6 h-6 border-2 border-gold/40 border-t-gold rounded-full animate-spin" />
@@ -66,7 +66,8 @@ export default function MagazineFeature() {
 
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
-        const viewport = page.getViewport({ scale: 2.5 });
+        const rotation = page.rotate || 0;
+        const viewport = page.getViewport({ scale: 2.5, rotation });
         const canvas = document.createElement('canvas');
         canvas.width = viewport.width;
         canvas.height = viewport.height;
