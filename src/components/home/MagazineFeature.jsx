@@ -66,8 +66,8 @@ export default function MagazineFeature() {
 
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
-        const rotation = page.rotate || 0;
-        const viewport = page.getViewport({ scale: 2.5, rotation });
+        // PDF content is drawn 90° CCW; apply 90° CW to render upright
+        const viewport = page.getViewport({ scale: 2.5, rotation: 90 });
         const canvas = document.createElement('canvas');
         canvas.width = viewport.width;
         canvas.height = viewport.height;
