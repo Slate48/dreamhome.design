@@ -7,6 +7,7 @@ import { ArrowRight, LayoutGrid, BookOpen } from 'lucide-react';
 import PageHeader from '../components/shared/PageHeader';
 import SectionReveal from '../components/shared/SectionReveal';
 import PortfolioFlipbook from '../components/portfolio/PortfolioFlipbook';
+import ErrorBoundary from '../components/shared/ErrorBoundary';
 
 const CATEGORIES = ['All', 'Kitchens', 'Bathrooms', 'Closets', 'Home Bars', 'Pantries', 'Custom Millwork'];
 
@@ -89,7 +90,27 @@ export default function Portfolio() {
           {/* Lookbook view */}
           {viewMode === 'flipbook' && (
             <SectionReveal>
-              <PortfolioFlipbook allItems={displayItems} />
+              {loaded ? (
+                <ErrorBoundary
+                  fallback={
+                    <div className="py-16 text-center">
+                      <p className="font-body text-muted-foreground mb-4">Unable to load the lookbook.</p>
+                      <button
+                        onClick={() => setViewMode('grid')}
+                        className="text-gold font-body text-sm underline hover:no-underline"
+                      >
+                        View as gallery instead
+                      </button>
+                    </div>
+                  }
+                >
+                  <PortfolioFlipbook allItems={items} />
+                </ErrorBoundary>
+              ) : (
+                <div className="flex items-center justify-center h-64">
+                  <div className="w-8 h-8 border-2 border-gold/40 border-t-gold rounded-full animate-spin" />
+                </div>
+              )}
             </SectionReveal>
           )}
 
