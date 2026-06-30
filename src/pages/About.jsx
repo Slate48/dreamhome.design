@@ -12,7 +12,7 @@ const values = [
   { icon: Users, title: 'Partnership', desc: 'Your project is a collaboration. We listen deeply, design thoughtfully, and build with the care we\'d give our own homes. Your vision drives every decision we make.' },
 ];
 
-const DEPT_ORDER = ['Sales', 'Cabinetry', 'Design', 'Estimating', 'Engineering', 'Project Management', 'Countertop', 'Management', 'Administration'];
+const DEPT_ORDER = ['Sales', 'Cabinetry', 'Design', 'Estimating', 'Engineering', 'Project Management', 'Countertop', 'Administration', 'Management'];
 
 export default function About() {
   const [teamMembers, setTeamMembers] = useState([]);
@@ -22,10 +22,11 @@ export default function About() {
   }, []);
 
   const founders = teamMembers.filter(m => m.is_founder);
-  const nonFounders = teamMembers.filter(m => !m.is_founder);
 
   const grouped = DEPT_ORDER.reduce((acc, dept) => {
-    const members = nonFounders.filter(m => m.department === dept);
+    const members = teamMembers
+      .filter(m => m.department === dept)
+      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
     if (members.length) acc[dept] = members;
     return acc;
   }, {});
