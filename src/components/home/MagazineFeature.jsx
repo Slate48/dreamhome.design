@@ -8,7 +8,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
 // To update the handbook, replace this URL with the new PDF file URL
-const HANDBOOK_PDF_URL = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/9f79840c4_DHDONBOARDINGWELCOMEGUIDE_202601072.pdf';
+const HANDBOOK_PDF_URL = 'https://media.base44.com/files/public/6a0c98b9972c40dc9ebe5d05/8f7616d18_OnboardingPacket.pdf';
 
 const FlipPage = React.forwardRef(({ imageUrl, pageNum }, ref) => (
   <div ref={ref} className="bg-white overflow-hidden">
