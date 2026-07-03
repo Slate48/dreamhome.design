@@ -44,26 +44,14 @@ export default function About() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <SectionReveal>
             <div className="grid grid-cols-2 gap-4">
-              {founders.length > 0 ? founders.map((f, i) => (
-                <div key={f.id} className={i % 2 !== 0 ? 'mt-8' : ''}>
-                  {f.photo_url
-                    ? <img src={f.photo_url} alt={f.name} className="w-full h-80 object-cover object-top rounded-lg shadow-xl" />
-                    : <div className="w-full h-80 rounded-lg shadow-xl bg-warm-gray flex items-center justify-center text-4xl font-heading text-gold/50">{f.name.split(' ').map(n => n[0]).join('')}</div>
-                  }
-                  <p className="text-center font-body text-sm text-muted-foreground mt-2">{f.name.split(' ')[0]}</p>
-                </div>
-              )) : (
-                <>
-                  <div>
-                    <img src="https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/b9de115e3_Screenshot2026-05-20at10320PM.png" alt="Rebecca Siewin" className="w-full h-80 object-cover object-top rounded-lg shadow-xl" />
-                    <p className="text-center font-body text-sm text-muted-foreground mt-2">Rebecca</p>
-                  </div>
-                  <div className="mt-8">
-                    <img src="https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/6704075b6_Screenshot2026-05-20at10140PM.png" alt="Bryan Siewin" className="w-full h-80 object-cover object-top rounded-lg shadow-xl" />
-                    <p className="text-center font-body text-sm text-muted-foreground mt-2">Bryan</p>
-                  </div>
-                </>
-              )}
+              <div>
+                <img src="https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/b9de115e3_Screenshot2026-05-20at10320PM.png" alt="Rebecca Siewin" className="w-full h-80 object-cover object-top rounded-lg shadow-xl" />
+                <p className="text-center font-body text-sm text-muted-foreground mt-2">Rebecca</p>
+              </div>
+              <div className="mt-8">
+                <img src="https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/6704075b6_Screenshot2026-05-20at10140PM.png" alt="Bryan Siewin" className="w-full h-80 object-cover object-top rounded-lg shadow-xl" />
+                <p className="text-center font-body text-sm text-muted-foreground mt-2">Bryan</p>
+              </div>
             </div>
           </SectionReveal>
           <SectionReveal delay={0.2}>
