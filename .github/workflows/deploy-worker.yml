@@ -1,0 +1,48 @@
+name: Deploy Worker (wl-dreamhome-api)
+
+# Auto-deploys the Cloudflare Worker that serves public content from D1.
+#
+# The Pages SITE auto-deploys via Cloudflare's native git integration (Settings ->
+# Build). That integration does NOT touch the Worker, so this workflow covers it:
+# on any push to `main` that changes workers/api/**, redeploy wl-dreamhome-api.
+#
+# D1 (wl-dreamhome-db) is intentionally NOT auto-migrated here. The prod DB was
+# seeded via `wrangler d1 execute --file` (not tracked migrations), and
+# migrations/seed.generated.sql would DUPLICATE all content if re-applied. Apply
+# D1 schema/seed changes deliberately from a workstation:
+#   cd workers/api && node cf-wrangler.cjs d1 execute wl-dreamhome-db --remote --file=migrations/<file>.sql
+# (cf-wrangler.cjs enforces fleet-account credential isolation.)
+#
+# Requires repo secret: CLOUDFLARE_API_TOKEN
+#   (Account > Workers Scripts: Edit, Account > D1: Edit, Account Settings: Read;
+#    scoped to account 37172187c20bd1fcc38760c946161fb0 "Levi Elizaga").
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'workers/api/**'
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-worker-wl-dreamhome
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Deploy wl-dreamhome-api
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: '37172187c20bd1fcc38760c946161fb0'
+          workingDirectory: workers/api
+          wranglerVersion: '4.83.0'
+          command: deploy
