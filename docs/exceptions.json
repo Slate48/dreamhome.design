@@ -1,0 +1,8 @@
+{
+  "allowed_extra_docs": [
+    "FEATURES.md"
+  ],
+  "notes": {
+    "FEATURES.md": "base44-usage + feature inventory that feeds the phased base44->CF migration in docs/ROADMAP.md. Registered during fleet onboarding 2026-07-06 (Adopt mode). Standard docs/ layout applies (no FleetManager root-doc exception)."
+  }
+}
