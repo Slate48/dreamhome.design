@@ -6,4 +6,4 @@ compatibility_date = "2024-11-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "wl-dreamhome-db"
-database_id = "PLACEHOLDER_SET_AFTER_D1_CREATE"
+database_id = "d62580c4-0719-4fa8-bea9-40e65ac06e53"

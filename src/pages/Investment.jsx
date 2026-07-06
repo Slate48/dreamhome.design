@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CreditCard, Building, FileText, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
+import { publicContent } from '@/api/publicContent';
 import PageHeader from '../components/shared/PageHeader';
 import SectionReveal from '../components/shared/SectionReveal';
 import MagazineFeature from '../components/home/MagazineFeature';
@@ -15,8 +15,8 @@ export default function Investment() {
 
   useEffect(() => {
     Promise.all([
-      base44.entities.InvestmentTier.list('step_number', 10),
-      base44.entities.SiteSettings.filter({ key: 'main' })
+      publicContent.InvestmentTier.list('step_number', 10),
+      publicContent.SiteSettings.filter({ key: 'main' })
     ]).then(([t, s]) => {
       setTiers(t);
       if (s.length) setSettings(s[0]);

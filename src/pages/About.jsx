@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { publicContent } from '@/api/publicContent';
 import PageHeader from '../components/shared/PageHeader';
 import SectionReveal from '../components/shared/SectionReveal';
 import { Heart, Eye, Users } from 'lucide-react';
@@ -18,7 +18,7 @@ export default function About() {
   const [teamMembers, setTeamMembers] = useState([]);
 
   useEffect(() => {
-    base44.entities.TeamMember.list('sort_order', 100).then(setTeamMembers);
+    publicContent.TeamMember.list('sort_order', 100).then(setTeamMembers);
   }, []);
 
   const founders = teamMembers.filter(m => m.is_founder);

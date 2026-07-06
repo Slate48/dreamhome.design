@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { publicContent } from '@/api/publicContent';
 import PageHeader from '../components/shared/PageHeader';
 import SectionReveal from '../components/shared/SectionReveal';
 import { Clock } from 'lucide-react';
@@ -10,7 +10,7 @@ export default function Process() {
   const [stages, setStages] = useState([]);
 
   useEffect(() => {
-    base44.entities.ProcessStage.filter({ is_active: true }, 'stage_number', 20).then(setStages);
+    publicContent.ProcessStage.filter({ is_active: true }, 'stage_number', 20).then(setStages);
   }, []);
 
   return (

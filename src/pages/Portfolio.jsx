@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { publicContent } from '@/api/publicContent';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ArrowRight, LayoutGrid, BookOpen } from 'lucide-react';
@@ -35,7 +35,7 @@ export default function Portfolio() {
   const [viewMode, setViewMode] = useState('flipbook');
 
   useEffect(() => {
-    base44.entities.PortfolioItem.list('sort_order', 200)
+    publicContent.PortfolioItem.list('sort_order', 200)
       .then(data => {
         setItems(data.length > 0 ? data : STATIC_ITEMS);
         setLoaded(true);

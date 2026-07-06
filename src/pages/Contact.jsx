@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { publicContent } from '@/api/publicContent';
 import { Mail, Phone, Globe, MapPin, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,7 @@ export default function Contact() {
   });
 
   useEffect(() => {
-    base44.entities.SiteSettings.filter({ key: 'main' }).then(data => {
+    publicContent.SiteSettings.filter({ key: 'main' }).then(data => {
       if (data.length) setSettings(data[0]);
     });
   }, []);
@@ -27,7 +27,7 @@ export default function Contact() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    await base44.entities.ContactInquiry.create(form);
+    await publicContent.ContactInquiry.create(form);
     toast({ title: 'Inquiry Sent', description: 'We\'ll be in touch within 24 hours.' });
     setForm({ name: '', email: '', phone: '', project_type: '', how_heard: '', message: '' });
     setLoading(false);

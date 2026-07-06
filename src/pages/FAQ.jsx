@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { publicContent } from '@/api/publicContent';
 import PageHeader from '../components/shared/PageHeader';
 import SectionReveal from '../components/shared/SectionReveal';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -8,7 +8,7 @@ export default function FAQ() {
   const [faqs, setFaqs] = useState([]);
 
   useEffect(() => {
-    base44.entities.FAQItem.filter({ is_active: true }, 'sort_order', 100).then(setFaqs);
+    publicContent.FAQItem.filter({ is_active: true }, 'sort_order', 100).then(setFaqs);
   }, []);
 
   return (
