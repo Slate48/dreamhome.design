@@ -77,8 +77,9 @@ export default function PortfolioFlipbook({ allItems }) {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
         const available = el.offsetWidth;
+        if (available < 340) return;
         const pageW = Math.max(160, Math.min(Math.floor(available / 2) - 8, 800));
-        const pageH = Math.round(pageW * (680 / 520));
+        const pageH = Math.max(120, Math.round(pageW * (680 / 520)));
         setBookDims(prev => {
           if (prev.width === pageW && prev.height === pageH) return prev;
           return { width: pageW, height: pageH, key: prev.key + 1 };

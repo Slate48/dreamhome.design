@@ -37,6 +37,8 @@ export default function MagazineFeature() {
     if (!el) return;
     const compute = () => {
       const available = el.offsetWidth;
+      // Container not laid out yet (0 or too small) — keep previous valid dims
+      if (available < 340) return;
       // Reserve space for navbar, header, controls, gaps, and section padding
       const availableHeight = Math.max(240, window.innerHeight - 520);
       // Cap height by viewport first, then derive width
@@ -47,7 +49,13 @@ export default function MagazineFeature() {
         pageW = Math.max(160, Math.floor(available / 2) - 8);
         pageH = Math.round(pageW * (616 / 850));
       }
-      setBookDims(prev => ({ width: pageW, height: pageH, key: prev.key + 1 }));
+      // Final guard: react-pageflip throws "Invalid width or height" on 0/negative
+      pageW = Math.max(160, pageW);
+      pageH = Math.max(120, pageH);
+      setBookDims(prev => {
+        if (prev.width === pageW && prev.height === pageH) return prev;
+        return { width: pageW, height: pageH, key: prev.key + 1 };
+      });
     };
     compute();
     const ro = new ResizeObserver(compute);
@@ -95,7 +103,7 @@ export default function MagazineFeature() {
 
         <SectionReveal>
           <div ref={containerRef} className="flex flex-col items-center gap-8 w-full pb-6">
-            {totalPages > 0 && (
+            {totalPages > 0 && bookDims.width > 0 && bookDims.height > 0 && (
               <div className="w-full flex justify-center overflow-visible mb-10">
                 <HTMLFlipBook
                   key={bookDims.key}
