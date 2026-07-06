@@ -1,8 +1,10 @@
 {
   "allowed_extra_docs": [
-    "FEATURES.md"
+    "FEATURES.md",
+    "DNS_CUTOVER.md"
   ],
   "notes": {
-    "FEATURES.md": "base44-usage + feature inventory that feeds the phased base44->CF migration in docs/ROADMAP.md. Registered during fleet onboarding 2026-07-06 (Adopt mode). Standard docs/ layout applies (no FleetManager root-doc exception)."
+    "FEATURES.md": "base44-usage + feature inventory that feeds the phased base44->CF migration in docs/ROADMAP.md. Registered during fleet onboarding 2026-07-06 (Adopt mode). Standard docs/ layout applies (no FleetManager root-doc exception).",
+    "DNS_CUTOVER.md": "Authoritative GoDaddy DNS capture + the exact records to mirror into the fleet CF zone (email-preservation hard gate) + the GoDaddy nameserver-switch runbook for Levi. Registered 2026-07-06 during the DNS cutover-prep step."
   }
 }

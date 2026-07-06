@@ -31,7 +31,32 @@
   onboarding the record files have not landed yet — expected under `base44/` or a
   new `data/`/`records/` dir (docs/FEATURES.md "Data source for the D1 seed").
 
-## Phase 1 — Strip @base44/sdk + SDK shim/abstraction layer  ⏳ planned
+## Fast-track — PUBLIC SITE migrated to Cloudflare ✅ DONE (2026-07-06)
+Public-site-first slice (public routes only), on branch `feat/migrate-public-site`:
+- **D1 `wl-dreamhome-db`** created on the fleet account; schema
+  `workers/api/migrations/0001_public_content.sql` (8 public-content tables +
+  ContactInquiry). Seeded idempotently from `database_export.json`
+  (`workers/api/seed-from-export.cjs`): PortfolioItem 55, TeamMember 30, FAQItem 8,
+  ProcessStage 8, InvestmentTier 3, Testimonial 3, SiteSettings 1 — verified in D1.
+- **Worker `wl-dreamhome-api`** (https://wl-dreamhome-api.levi-371.workers.dev):
+  read-only GET `/api/<Entity>` (base44 .list/.filter semantics) + POST
+  `/api/ContactInquiry`. CORS-enabled.
+- **Frontend:** `src/api/publicContent.js` shim; the 7 public pages + `useSiteSettings`
+  now read from the Worker, OFF `@base44/sdk`. Portal/admin deliberately still on the SDK.
+- **Deployed + verified live:** the deployed SPA fetches the Worker (200) and renders
+  real export content (portfolio titles + footer contact from D1).
+- **Later phases:** portal + admin routes; images still on `media.base44.com` (→ R2
+  in P5); `<title>Base44 APP</title>` (cosmetic, P1 full).
+
+## DNS cutover prep — STAGING BLOCKED (see docs/DNS_CUTOVER.md) ⚠️
+Authoritative GoDaddy DNS captured (Google Workspace MX + SPF/_spfm + 3 TXT
+verifications; no DKIM/DMARC/CAA). Zone add + record mirror + Pages custom-domain
+attach NOT completed: the fleet CF token lacks `Zone:Create` and the wrangler OAuth
+token isn't scriptable for raw CF-API calls. Unblock via the CF dashboard OR a fleet
+token with Zone:Create+DNS:Edit+Pages:Edit. Email preservation is a hard gate — every
+record to mirror is in docs/DNS_CUTOVER.md.
+
+## Phase 1 — Strip @base44/sdk + SDK shim/abstraction layer  ⏳ planned (portal/admin remainder)
 Introduce a thin data-access abstraction (`src/api/client.js`) so pages stop calling
 `base44.*` directly. Route all `entities.*` / `auth.*` / `UploadFile` through it,
 behind the existing react-query hooks. Remove `@base44/vite-plugin` from
