@@ -1,0 +1,9 @@
+name = "wl-dreamhome-api"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# D1: wl-dreamhome-db (fleet account). database_id filled after `d1 create`.
+[[d1_databases]]
+binding = "DB"
+database_name = "wl-dreamhome-db"
+database_id = "PLACEHOLDER_SET_AFTER_D1_CREATE"
