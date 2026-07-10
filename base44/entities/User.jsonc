@@ -13,5 +13,6 @@
       "default": "client",
       "description": "User role: client (portal access only), manager (admin portal read/manage), admin (full admin access), super_admin (full access + user management)"
     }
-  }
+  },
+  "required": []
 }
