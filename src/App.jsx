@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -41,8 +41,19 @@ import Messages from './pages/portal/Messages';
 import Billing from './pages/portal/Billing';
 import Help from './pages/portal/Help';
 
+// Client portal is also served on its own subdomain (portal.dreamhome.design), from the
+// same bundle as the marketing site. On that hostname, an already-authenticated client
+// landing on "/" should go straight to the dashboard instead of seeing the marketing home page.
+// NOTE: this only fires for authenticated clients — if it fired unconditionally, an
+// unauthenticated visit would bounce "/" -> "/portal" -> RoleGuard's redirectTo="/" -> "/portal"
+// forever, since RoleGuard sends non-client/unauthenticated users on /portal back to "/".
+const PORTAL_HOSTNAME = 'portal.dreamhome.design';
+
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, isAuthenticated, user } = useAuth();
+
+  const isPortalHost = typeof window !== 'undefined' && window.location.hostname === PORTAL_HOSTNAME;
+  const shouldRedirectRootToPortal = isPortalHost && isAuthenticated && user?.role === 'client';
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -68,7 +79,7 @@ const AuthenticatedApp = () => {
     <Routes>
       {/* Public website */}
       <Route element={<PublicLayout />}>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={shouldRedirectRootToPortal ? <Navigate to="/portal" replace /> : <Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/process" element={<Process />} />
         <Route path="/portfolio" element={<Portfolio />} />
