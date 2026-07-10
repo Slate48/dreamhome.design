@@ -47,14 +47,6 @@ import Help from './pages/portal/Help';
 // NOTE: this only fires for authenticated clients — if it fired unconditionally, an
 // unauthenticated visit would bounce "/" -> "/portal" -> RoleGuard's redirectTo="/" -> "/portal"
 // forever, since RoleGuard sends non-client/unauthenticated users on /portal back to "/".
-//
-// Anonymous visitors to portal.dreamhome.design are handled separately: instead of falling
-// through to the marketing <Home /> page, they're sent straight to base44's hosted login via
-// navigateToLogin(). This is safe from the bounce loop above because navigateToLogin() sends
-// the browser to an entirely external base44 URL — there's no in-app route involved, so
-// RoleGuard's redirectTo="/" never re-enters the picture. It also doubles as the only way to
-// create the first portal account, since base44's hosted login page has its own sign-up flow
-// and this app has no local signup form.
 const PORTAL_HOSTNAME = 'portal.dreamhome.design';
 
 const AuthenticatedApp = () => {
@@ -62,7 +54,6 @@ const AuthenticatedApp = () => {
 
   const isPortalHost = typeof window !== 'undefined' && window.location.hostname === PORTAL_HOSTNAME;
   const shouldRedirectRootToPortal = isPortalHost && isAuthenticated && user?.role === 'client';
-  const shouldForceLoginOnPortalHost = isPortalHost && !isAuthenticated;
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -82,11 +73,6 @@ const AuthenticatedApp = () => {
       navigateToLogin();
       return null;
     }
-  }
-
-  if (shouldForceLoginOnPortalHost) {
-    navigateToLogin();
-    return null;
   }
 
   return (
