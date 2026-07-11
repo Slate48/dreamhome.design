@@ -9,15 +9,19 @@
  *   publicContent.<Entity>.filter(where, sortField, limit) -> GET /api/<Entity>?<where>&sort=..&limit=..
  *   publicContent.ContactInquiry.create(obj)               -> POST /api/ContactInquiry
  *
- * Portal/admin routes still use @base44/sdk (later migration phases). This module
- * touches ONLY public content.
+ * Portal/admin routes now use src/api/adminEntities.js (staff-gated CRUD) and
+ * src/lib/AuthContext.jsx (cookie session) instead of @base44/sdk — see those
+ * files. This module still touches ONLY public content.
  */
 
-// Worker base URL. Overridable at build time via VITE_API_BASE; defaults to the
-// deployed fleet Worker so a plain `npm run build` produces a working public site.
-const API_BASE =
-  (import.meta.env && import.meta.env.VITE_API_BASE) ||
-  'https://wl-dreamhome-api.levi-371.workers.dev'
+// Worker base URL. A Worker Route now serves /api/* same-origin on
+// dreamhome.design / www.dreamhome.design / portal.dreamhome.design, so the
+// default is a relative path (same origin as wherever the SPA is served from —
+// this also makes cookie-based admin/portal auth "just work", no CORS).
+// Overridable at build time via VITE_API_BASE for local dev against the
+// standalone workers.dev URL (see workers/api/wrangler.toml — workers_dev
+// stays enabled for exactly this).
+const API_BASE = (import.meta.env && import.meta.env.VITE_API_BASE) || ''
 
 async function getList(entity, sort, limit, where) {
   const qs = new URLSearchParams()

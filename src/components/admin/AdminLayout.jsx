@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
   LayoutGrid, Users, HelpCircle, GitBranch, DollarSign,
-  Settings, Image, Menu, X, LogOut, ChevronRight, Star
+  Settings, Image, Menu, X, LogOut, ChevronRight, Star, Inbox
 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 
 const navItems = [
@@ -15,6 +14,7 @@ const navItems = [
   { label: 'Process Steps', path: '/admin/process', icon: GitBranch },
   { label: 'Investment', path: '/admin/investment', icon: DollarSign },
   { label: 'Testimonials', path: '/admin/testimonials', icon: Star },
+  { label: 'Inquiries', path: '/admin/inquiries', icon: Inbox },
   { label: 'Site Settings', path: '/admin/settings', icon: Settings },
 ];
 
@@ -27,7 +27,7 @@ const ROLE_LABELS = {
 export default function AdminLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -75,7 +75,7 @@ export default function AdminLayout() {
             </div>
           )}
           <button
-            onClick={() => base44.auth.logout('/')}
+            onClick={() => logout()}
             className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-white/40 hover:text-white hover:bg-white/5 font-body text-sm transition-colors"
           >
             <LogOut size={16} /> Sign Out

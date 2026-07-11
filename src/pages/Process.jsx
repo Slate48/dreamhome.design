@@ -4,7 +4,7 @@ import PageHeader from '../components/shared/PageHeader';
 import SectionReveal from '../components/shared/SectionReveal';
 import { Clock } from 'lucide-react';
 
-const processHero = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/175087e57_45-web-or-mls-NEchoCanyonCir-L0202-058.jpg';
+const processHero = 'https://pub-c9ac284ec9d9413b8aa88acb3167e31d.r2.dev/hero/process.jpg';
 
 export default function Process() {
   const [stages, setStages] = useState([]);

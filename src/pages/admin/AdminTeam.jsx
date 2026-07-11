@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { adminApi } from '@/api/adminEntities';
+import { uploadFile } from '@/lib/uploadFile';
 import { Plus, Pencil, Trash2, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +23,7 @@ export default function AdminTeam() {
   useEffect(() => { load(); }, []);
 
   async function load() {
-    const data = await base44.entities.TeamMember.list('sort_order', 100);
+    const data = await adminApi.list('TeamMember', 'sort_order', 100);
     setMembers(data);
   }
 
@@ -33,7 +34,7 @@ export default function AdminTeam() {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await uploadFile(file);
     setForm(f => ({ ...f, photo_url: file_url }));
     setUploading(false);
   }
@@ -41,10 +42,10 @@ export default function AdminTeam() {
   async function handleSave() {
     setSaving(true);
     if (editing) {
-      await base44.entities.TeamMember.update(editing.id, form);
+      await adminApi.update('TeamMember', editing.id, form);
       toast({ title: 'Team member updated' });
     } else {
-      await base44.entities.TeamMember.create({ ...form, sort_order: members.length });
+      await adminApi.create('TeamMember', { ...form, sort_order: members.length });
       toast({ title: 'Team member added' });
     }
     setShowForm(false);
@@ -54,7 +55,7 @@ export default function AdminTeam() {
 
   async function handleDelete(m) {
     if (!confirm(`Remove ${m.name}?`)) return;
-    await base44.entities.TeamMember.delete(m.id);
+    await adminApi.delete('TeamMember', m.id);
     toast({ title: 'Removed' });
     await load();
   }

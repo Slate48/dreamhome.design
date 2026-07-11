@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { adminApi } from '@/api/adminEntities';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Plus, Pencil, Trash2, GripVertical, X, Check, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,7 @@ export default function AdminFAQs() {
   useEffect(() => { load(); }, []);
 
   async function load() {
-    const data = await base44.entities.FAQItem.list('sort_order', 100);
+    const data = await adminApi.list('FAQItem', 'sort_order', 100);
     setFaqs(data);
   }
 
@@ -31,7 +31,7 @@ export default function AdminFAQs() {
     reordered.splice(result.destination.index, 0, moved);
     const updated = reordered.map((item, idx) => ({ ...item, sort_order: idx }));
     setFaqs(updated);
-    await Promise.all(updated.map(item => base44.entities.FAQItem.update(item.id, { sort_order: item.sort_order })));
+    await Promise.all(updated.map(item => adminApi.update('FAQItem', item.id, { sort_order: item.sort_order })));
     toast({ title: 'Order saved' });
   }
 
@@ -41,10 +41,10 @@ export default function AdminFAQs() {
   async function handleSave() {
     setSaving(true);
     if (editing) {
-      await base44.entities.FAQItem.update(editing.id, form);
+      await adminApi.update('FAQItem', editing.id, form);
       toast({ title: 'FAQ updated' });
     } else {
-      await base44.entities.FAQItem.create({ ...form, sort_order: faqs.length });
+      await adminApi.create('FAQItem', { ...form, sort_order: faqs.length });
       toast({ title: 'FAQ added' });
     }
     setShowForm(false);
@@ -54,13 +54,13 @@ export default function AdminFAQs() {
 
   async function handleDelete(faq) {
     if (!confirm('Delete this FAQ?')) return;
-    await base44.entities.FAQItem.delete(faq.id);
+    await adminApi.delete('FAQItem', faq.id);
     toast({ title: 'Deleted' });
     await load();
   }
 
   async function toggleActive(faq) {
-    await base44.entities.FAQItem.update(faq.id, { is_active: !faq.is_active });
+    await adminApi.update('FAQItem', faq.id, { is_active: !faq.is_active });
     await load();
   }
 

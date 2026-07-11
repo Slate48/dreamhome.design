@@ -1,120 +1,250 @@
 /**
- * wl-dreamhome-api — public marketing-site API (base44→CF migration, public phase).
+ * wl-dreamhome-api — Dream Home Design marketing site + portal/admin API
+ * (base44→CF migration). Backed by D1 `wl-dreamhome-db` + R2 `wl-dreamhome-media`.
  *
- * Read-only GET endpoints for the PUBLIC content entities + a POST for the /contact
- * form (ContactInquiry). Backed by D1 `wl-dreamhome-db`. Portal/admin entities are
- * NOT served here (later migration phases). No auth (public content only).
+ * Public phase (unchanged): GET on the 7 CMS content entities + POST on
+ * ContactInquiry (the /contact form) stay unauthenticated — the live
+ * marketing site depends on both.
  *
- * Response shape mirrors the base44 SDK: each GET returns a JSON array of records;
- * booleans are re-hydrated to true/false and JSON columns (payment_methods) parsed,
- * so the existing React pages need no shape changes — only their data source swaps.
+ * Portal/admin phase (this file): cookie+JWT auth (PBKDF2-HMAC-SHA-256 +
+ * HS256, both via Web Crypto — no extra npm deps) gates staff CRUD on the 7
+ * CMS entities, the ContactInquiry staff inbox (GET), and authenticated file
+ * uploads to R2. Response shape mirrors the base44 SDK: GET list returns a
+ * JSON array; booleans are hydrated to true/false and JSON columns parsed.
  */
 
-const PUBLIC_ENTITIES = {
-  PortfolioItem: { bools: ['featured'], json: [], defaultSort: 'sort_order' },
-  TeamMember:    { bools: ['show_title', 'is_founder'], json: [], defaultSort: 'sort_order' },
-  FAQItem:       { bools: ['is_active'], json: [], defaultSort: 'sort_order' },
-  ProcessStage:  { bools: ['is_active'], json: [], defaultSort: 'stage_number' },
-  InvestmentTier:{ bools: [], json: ['payment_methods'], defaultSort: 'step_number' },
-  Testimonial:   { bools: ['featured'], json: [], defaultSort: 'created_date' },
-  SiteSettings:  { bools: [], json: [], defaultSort: 'key' },
+import { json, parseJson, nowIso, newId, CORS } from './lib/http.js'
+import { verifyPassword, signJwt, buildSessionCookie, clearSessionCookie, requireRole, getSession } from './lib/auth.js'
+import { ENTITIES, CMS_ENTITIES, getEntity, hydrate, dehydrate } from './lib/entities.js'
+
+const MAX_UPLOAD_BYTES = 20 * 1024 * 1024 // 20MB
+const ALLOWED_UPLOAD_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/svg+xml',
+  'video/mp4',
+  'video/quicktime',
+])
+
+function safeName(name) {
+  return (name || 'file').toLowerCase().replace(/[^a-z0-9.\-_]/g, '-').slice(-100)
 }
 
-// Columns allowed as sort / filter targets, per entity — prevents SQL injection via
-// the sort/filter query params (identifiers can't be bound as parameters).
-const SORTABLE = {
-  PortfolioItem: ['sort_order', 'title', 'category', 'featured', 'created_date'],
-  TeamMember: ['sort_order', 'name', 'department', 'is_founder', 'created_date'],
-  FAQItem: ['sort_order', 'is_active', 'created_date'],
-  ProcessStage: ['stage_number', 'is_active', 'created_date'],
-  InvestmentTier: ['step_number', 'created_date'],
-  Testimonial: ['created_date', 'rating', 'featured'],
-  SiteSettings: ['key'],
-}
-const FILTERABLE = {
-  PortfolioItem: ['category', 'featured'],
-  TeamMember: ['department', 'is_founder'],
-  FAQItem: ['is_active'],
-  ProcessStage: ['is_active', 'stage_number'],
-  InvestmentTier: ['step_number'],
-  Testimonial: ['featured', 'project_type'],
-  SiteSettings: ['key'],
-}
-
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-}
-
-function json(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json', ...CORS },
-  })
-}
-
-function hydrate(row, meta) {
-  if (!row) return row
-  const out = { ...row }
-  for (const b of meta.bools) if (b in out) out[b] = !!out[b]
-  for (const j of meta.json) {
-    if (typeof out[j] === 'string' && out[j]) {
-      try { out[j] = JSON.parse(out[j]) } catch { /* leave as-is */ }
-    }
+async function handleUpload(request, env) {
+  if (!env.MEDIA_BUCKET) {
+    return json({ error: 'R2 bucket is not configured (missing MEDIA_BUCKET binding)' }, 500)
   }
-  return out
-}
 
-function newId() {
-  // base44-style opaque id; crypto.randomUUID hyphens stripped is fine for our rows.
-  return (crypto.randomUUID && crypto.randomUUID().replace(/-/g, '')) ||
-    Math.random().toString(16).slice(2) + Date.now().toString(16)
+  let form
+  try {
+    form = await request.formData()
+  } catch (e) {
+    return json({ error: "Expected multipart/form-data with a 'file' field" }, 400)
+  }
+
+  const file = form.get('file')
+  if (!file || typeof file === 'string') {
+    return json({ error: 'No file provided' }, 400)
+  }
+
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return json({ error: `File too large (max ${MAX_UPLOAD_BYTES / 1024 / 1024}MB)` }, 413)
+  }
+
+  const type = file.type || 'application/octet-stream'
+  if (!ALLOWED_UPLOAD_TYPES.has(type)) {
+    return json({ error: `File type not allowed: ${type}` }, 415)
+  }
+
+  const key = `${crypto.randomUUID()}-${safeName(file.name)}`
+  await env.MEDIA_BUCKET.put(key, file.stream(), {
+    httpMetadata: { contentType: type },
+  })
+
+  const base = (env.MEDIA_BASE_URL || '').replace(/\/+$/, '')
+  const file_url = base ? `${base}/${key}` : `/media/${key}`
+
+  return json({ file_url, key, type, size: file.size })
 }
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
     const { pathname, searchParams } = url
+    const method = request.method
+    const context = { request, env }
 
-    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS })
+    if (method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS })
     if (pathname === '/' || pathname === '/api/health') {
-      return json({ ok: true, service: 'wl-dreamhome-api', entities: Object.keys(PUBLIC_ENTITIES) })
+      return json({ ok: true, service: 'wl-dreamhome-api', entities: Object.keys(ENTITIES) })
     }
 
-    // /api/<Entity>
+    // ---- auth routes ----
+
+    if (pathname === '/api/auth/login' && method === 'POST') {
+      const body = await parseJson(request)
+      const email = (body.email || '').trim().toLowerCase()
+      const password = body.password || ''
+      if (!email || !password) {
+        return json({ error: 'Email and password are required' }, 400)
+      }
+      if (!env.JWT_SECRET) {
+        return json({ error: 'Server auth is not configured (missing JWT_SECRET)' }, 500)
+      }
+
+      const user = await env.DB
+        .prepare('SELECT id, email, password_hash, role, full_name FROM users WHERE email = ?')
+        .bind(email)
+        .first()
+
+      // Always run the password check (even against a null/dummy hash) so a
+      // missing account doesn't respond faster than a wrong password.
+      const ok = await verifyPassword(password, user ? user.password_hash : null)
+      if (!user || !ok) {
+        return json({ error: 'Invalid email or password' }, 401)
+      }
+
+      const token = await signJwt({ sub: user.id, email: user.email, role: user.role }, env.JWT_SECRET)
+      return json(
+        { success: true, user: { id: user.id, email: user.email, role: user.role, full_name: user.full_name } },
+        200,
+        { 'Set-Cookie': buildSessionCookie(token) }
+      )
+    }
+
+    if (pathname === '/api/auth/me' && method === 'GET') {
+      const user = await getSession(context)
+      if (!user) return json({ error: 'Not authenticated' }, 401)
+      return json({ id: user.id, email: user.email, role: user.role, full_name: user.full_name })
+    }
+
+    if (pathname === '/api/auth/logout' && method === 'POST') {
+      return json({ success: true }, 200, { 'Set-Cookie': clearSessionCookie() })
+    }
+
+    // ---- upload (any authenticated user) ----
+
+    if (pathname === '/api/upload' && method === 'POST') {
+      const auth = await requireRole(context, ['client', 'manager', 'admin', 'super_admin'])
+      if (auth.response) return auth.response
+      return handleUpload(request, env)
+    }
+
+    // ---- entity item routes: /api/<Entity>/<id> (PATCH, DELETE) ----
+
+    const itemMatch = pathname.match(/^\/api\/([A-Za-z]+)\/([A-Za-z0-9_-]+)$/)
+    if (itemMatch) {
+      const [, entityName, id] = itemMatch
+      if (!CMS_ENTITIES.includes(entityName)) return json({ error: 'not found' }, 404)
+      const config = getEntity(entityName)
+
+      if (method === 'PATCH') {
+        const auth = await requireRole(context, ['manager', 'admin', 'super_admin'])
+        if (auth.response) return auth.response
+
+        const body = await parseJson(request)
+        const values = dehydrate(config, body)
+        if (Object.keys(values).length === 0) {
+          return json({ error: 'No writable fields provided' }, 400)
+        }
+        const setClauses = Object.keys(values).map((col) => `${col} = ?`)
+        setClauses.push('updated_date = ?')
+        const bindValues = [...Object.values(values), nowIso(), id]
+
+        const result = await env.DB
+          .prepare(`UPDATE ${entityName} SET ${setClauses.join(', ')} WHERE id = ?`)
+          .bind(...bindValues)
+          .run()
+        if (!result.meta || result.meta.changes === 0) {
+          return json({ error: 'not found' }, 404)
+        }
+        const row = await env.DB.prepare(`SELECT * FROM ${entityName} WHERE id = ?`).bind(id).first()
+        return json(hydrate(config, row))
+      }
+
+      if (method === 'DELETE') {
+        const auth = await requireRole(context, ['manager', 'admin', 'super_admin'])
+        if (auth.response) return auth.response
+
+        const result = await env.DB.prepare(`DELETE FROM ${entityName} WHERE id = ?`).bind(id).run()
+        if (!result.meta || result.meta.changes === 0) {
+          return json({ error: 'not found' }, 404)
+        }
+        return json({ success: true })
+      }
+
+      return json({ error: 'method not allowed' }, 405)
+    }
+
+    // ---- entity collection routes: /api/<Entity> (GET, POST) ----
+
     const m = pathname.match(/^\/api\/([A-Za-z]+)$/)
     if (!m) return json({ error: 'not found' }, 404)
     const entity = m[1]
-    const meta = PUBLIC_ENTITIES[entity]
-    if (!meta) return json({ error: `unknown or non-public entity: ${entity}` }, 404)
+    const meta = getEntity(entity)
+    if (!meta) return json({ error: `unknown entity: ${entity}` }, 404)
 
-    // POST — only ContactInquiry accepts writes.
-    if (request.method === 'POST') {
-      if (entity !== 'ContactInquiry') return json({ error: 'read-only entity' }, 405)
-      let b
-      try { b = await request.json() } catch { return json({ error: 'invalid JSON' }, 400) }
-      if (!b || !b.name || !b.email || !b.message) {
-        return json({ error: 'name, email, and message are required' }, 400)
+    if (method === 'POST') {
+      // ContactInquiry keeps its own public, unauthenticated create path —
+      // the live /contact form depends on this staying open.
+      if (entity === 'ContactInquiry') {
+        let b
+        try { b = await request.json() } catch { return json({ error: 'invalid JSON' }, 400) }
+        if (!b || !b.name || !b.email || !b.message) {
+          return json({ error: 'name, email, and message are required' }, 400)
+        }
+        const id = newId()
+        const now = nowIso()
+        await env.DB.prepare(
+          `INSERT INTO ContactInquiry (id,name,email,phone,project_type,how_heard,message,status,created_date,updated_date)
+           VALUES (?,?,?,?,?,?,?,?,?,?)`
+        ).bind(id, b.name, b.email, b.phone || null, b.project_type || null, b.how_heard || null,
+               b.message, 'New', now, now).run()
+        return json({ id, name: b.name, email: b.email, status: 'New', created_date: now }, 201)
       }
+
+      // Generic staff-gated create for the 7 CMS entities.
+      if (!CMS_ENTITIES.includes(entity)) return json({ error: 'read-only entity' }, 405)
+      const auth = await requireRole(context, ['manager', 'admin', 'super_admin'])
+      if (auth.response) return auth.response
+
+      const body = await parseJson(request)
+      for (const field of meta.required) {
+        if (body[field] === undefined || body[field] === null || body[field] === '') {
+          return json({ error: `Missing required field: ${field}` }, 400)
+        }
+      }
+      const values = dehydrate(meta, body)
       const id = newId()
-      const now = new Date().toISOString()
-      await env.DB.prepare(
-        `INSERT INTO ContactInquiry (id,name,email,phone,project_type,how_heard,message,status,created_date,updated_date)
-         VALUES (?,?,?,?,?,?,?,?,?,?)`
-      ).bind(id, b.name, b.email, b.phone || null, b.project_type || null, b.how_heard || null,
-             b.message, 'New', now, now).run()
-      return json({ id, name: b.name, email: b.email, status: 'New', created_date: now }, 201)
+      const now = nowIso()
+      const columns = ['id', ...Object.keys(values), 'created_date', 'updated_date']
+      const placeholders = columns.map(() => '?').join(', ')
+      const bindValues = [id, ...Object.values(values), now, now]
+
+      await env.DB
+        .prepare(`INSERT INTO ${entity} (${columns.join(', ')}) VALUES (${placeholders})`)
+        .bind(...bindValues)
+        .run()
+      const row = await env.DB.prepare(`SELECT * FROM ${entity} WHERE id = ?`).bind(id).first()
+      return json(hydrate(meta, row), 201)
     }
 
-    if (request.method !== 'GET') return json({ error: 'method not allowed' }, 405)
+    if (method !== 'GET') return json({ error: 'method not allowed' }, 405)
+
+    // Staff-only entities (currently just ContactInquiry) require a role.
+    if (!meta.publicRead) {
+      const auth = await requireRole(context, ['manager', 'admin', 'super_admin'])
+      if (auth.response) return auth.response
+    }
 
     // GET list with optional filter + sort (mirrors base44 .list/.filter semantics).
     const clauses = []
     const binds = []
     for (const [k, v] of searchParams.entries()) {
       if (['sort', 'limit', 'order'].includes(k)) continue
-      if (!(FILTERABLE[entity] || []).includes(k)) continue
+      if (!(meta.filterable || []).includes(k)) continue
       // Coerce common boolean filter values to 0/1 for INTEGER columns.
       let val = v
       if (v === 'true') val = 1
@@ -123,7 +253,7 @@ export default {
       binds.push(val)
     }
     let sort = searchParams.get('sort') || meta.defaultSort
-    if (!(SORTABLE[entity] || []).includes(sort)) sort = meta.defaultSort
+    if (!(meta.sortable || []).includes(sort)) sort = meta.defaultSort
     const order = (searchParams.get('order') || 'asc').toLowerCase() === 'desc' ? 'DESC' : 'ASC'
     let limit = parseInt(searchParams.get('limit') || '500', 10)
     if (!Number.isFinite(limit) || limit <= 0 || limit > 2000) limit = 500
@@ -131,7 +261,7 @@ export default {
     const where = clauses.length ? ` WHERE ${clauses.join(' AND ')}` : ''
     const sql = `SELECT * FROM ${entity}${where} ORDER BY ${sort} ${order} LIMIT ${limit}`
     const rs = await env.DB.prepare(sql).bind(...binds).all()
-    const rows = (rs.results || []).map(r => hydrate(r, meta))
+    const rows = (rs.results || []).map((r) => hydrate(meta, r))
     return json(rows)
   },
 }

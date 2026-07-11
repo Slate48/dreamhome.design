@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { adminApi } from '@/api/adminEntities';
+import { uploadFile } from '@/lib/uploadFile';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Plus, Pencil, Trash2, GripVertical, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,7 @@ export default function AdminPortfolio() {
   useEffect(() => { load(); }, []);
 
   async function load() {
-    const data = await base44.entities.PortfolioItem.list('sort_order', 200);
+    const data = await adminApi.list('PortfolioItem', 'sort_order', 200);
     setItems(data);
   }
 
@@ -42,7 +43,7 @@ export default function AdminPortfolio() {
       const others = prev.filter(i => filtered.every(f => f.id !== i.id));
       return [...others, ...updated].sort((a, b) => a.sort_order - b.sort_order);
     });
-    await Promise.all(updated.map(item => base44.entities.PortfolioItem.update(item.id, { sort_order: item.sort_order })));
+    await Promise.all(updated.map(item => adminApi.update('PortfolioItem', item.id, { sort_order: item.sort_order })));
     toast({ title: 'Order saved' });
   }
 
@@ -53,7 +54,7 @@ export default function AdminPortfolio() {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await uploadFile(file);
     setForm(f => ({ ...f, image_url: file_url }));
     setUploading(false);
   }
@@ -61,10 +62,10 @@ export default function AdminPortfolio() {
   async function handleSave() {
     setSaving(true);
     if (editing) {
-      await base44.entities.PortfolioItem.update(editing.id, form);
+      await adminApi.update('PortfolioItem', editing.id, form);
       toast({ title: 'Item updated' });
     } else {
-      await base44.entities.PortfolioItem.create({ ...form, sort_order: items.length });
+      await adminApi.create('PortfolioItem', { ...form, sort_order: items.length });
       toast({ title: 'Item added' });
     }
     setShowForm(false);
@@ -74,7 +75,7 @@ export default function AdminPortfolio() {
 
   async function handleDelete(item) {
     if (!confirm(`Delete "${item.title}"?`)) return;
-    await base44.entities.PortfolioItem.delete(item.id);
+    await adminApi.delete('PortfolioItem', item.id);
     toast({ title: 'Item deleted' });
     await load();
   }

@@ -6,7 +6,6 @@ import {
   MessageSquare, Receipt, HelpCircle, Menu, X, LogOut, ChevronRight
 } from 'lucide-react';
 import Logo from '../shared/Logo';
-import { base44 } from '@/api/base44Client';
 
 const portalLinks = [
   { path: '/portal', icon: LayoutDashboard, label: 'Dashboard', exact: true },
@@ -21,7 +20,7 @@ const portalLinks = [
 export default function PortalLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const isActive = (link) => {
     if (link.exact) return location.pathname === link.path;
@@ -78,7 +77,7 @@ export default function PortalLayout() {
               </div>
             </div>
             <button
-              onClick={() => base44.auth.logout('/')}
+              onClick={() => logout()}
               className="flex items-center gap-2 px-3 py-2 text-white/30 hover:text-white/60 font-body text-xs transition-colors w-full"
             >
               <LogOut className="w-3.5 h-3.5" /> Sign Out

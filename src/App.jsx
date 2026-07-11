@@ -4,7 +4,6 @@ import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 import RoleGuard from './components/RoleGuard';
 
@@ -18,6 +17,10 @@ import AdminProcess from './pages/admin/AdminProcess';
 import AdminInvestment from './pages/admin/AdminInvestment';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminTestimonials from './pages/admin/AdminTestimonials';
+import AdminInquiries from './pages/admin/AdminInquiries';
+
+// Auth
+import Login from './pages/Login';
 
 // Public pages
 import Home from './pages/Home';
@@ -50,12 +53,12 @@ import Help from './pages/portal/Help';
 const PORTAL_HOSTNAME = 'portal.dreamhome.design';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, isAuthenticated, user } = useAuth();
+  const { isLoadingAuth, isAuthenticated, user } = useAuth();
 
   const isPortalHost = typeof window !== 'undefined' && window.location.hostname === PORTAL_HOSTNAME;
   const shouldRedirectRootToPortal = isPortalHost && isAuthenticated && user?.role === 'client';
 
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  if (isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-cream">
         <div className="text-center">
@@ -64,15 +67,6 @@ const AuthenticatedApp = () => {
         </div>
       </div>
     );
-  }
-
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      navigateToLogin();
-      return null;
-    }
   }
 
   return (
@@ -87,6 +81,9 @@ const AuthenticatedApp = () => {
         <Route path="/investment" element={<Investment />} />
         <Route path="/contact" element={<Contact />} />
       </Route>
+
+      {/* Auth */}
+      <Route path="/login" element={<Login />} />
 
       {/* Client portal — clients only */}
       <Route element={
@@ -122,6 +119,7 @@ const AuthenticatedApp = () => {
           </RoleGuard>
         } />
         <Route path="/admin/testimonials" element={<AdminTestimonials />} />
+        <Route path="/admin/inquiries" element={<AdminInquiries />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />
@@ -131,14 +129,14 @@ const AuthenticatedApp = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
+    <Router>
+      <AuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
           <AuthenticatedApp />
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
+          <Toaster />
+        </QueryClientProvider>
+      </AuthProvider>
+    </Router>
   )
 }
 

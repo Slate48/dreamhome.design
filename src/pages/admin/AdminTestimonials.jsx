@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { adminApi } from '@/api/adminEntities';
 import { Plus, Pencil, Trash2, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ export default function AdminTestimonials() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY);
 
-  const load = () => base44.entities.Testimonial.list('-created_date', 100).then(setItems);
+  const load = () => adminApi.list('Testimonial', '-created_date', 100).then(setItems);
   useEffect(() => { load(); }, []);
 
   const openNew = () => { setEditing(null); setForm(EMPTY); setOpen(true); };
@@ -24,9 +24,9 @@ export default function AdminTestimonials() {
 
   const save = async () => {
     if (editing) {
-      await base44.entities.Testimonial.update(editing.id, form);
+      await adminApi.update('Testimonial', editing.id, form);
     } else {
-      await base44.entities.Testimonial.create(form);
+      await adminApi.create('Testimonial', form);
     }
     setOpen(false);
     load();
@@ -34,7 +34,7 @@ export default function AdminTestimonials() {
 
   const remove = async (id) => {
     if (!confirm('Delete this testimonial?')) return;
-    await base44.entities.Testimonial.delete(id);
+    await adminApi.delete('Testimonial', id);
     load();
   };
 

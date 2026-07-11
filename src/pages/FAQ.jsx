@@ -16,7 +16,7 @@ export default function FAQ() {
       <PageHeader
         title="Frequently Asked Questions"
         subtitle="Everything you need to know about working with us"
-        imageUrl="https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/438f663cc_generated_53716705.png"
+        imageUrl="https://pub-c9ac284ec9d9413b8aa88acb3167e31d.r2.dev/hero/faq.png"
       />
 
       <section className="py-24 px-4 bg-white">

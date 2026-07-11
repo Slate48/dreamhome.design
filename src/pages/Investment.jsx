@@ -32,7 +32,7 @@ export default function Investment() {
       <PageHeader
         title="Your Investment"
         subtitle="Transparent pricing for exceptional craftsmanship"
-        imageUrl="https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/c49bb3d3d_generated_56d29da3.png"
+        imageUrl="https://pub-c9ac284ec9d9413b8aa88acb3167e31d.r2.dev/hero/investment.png"
       />
 
       <section className="py-24 px-4 bg-white">

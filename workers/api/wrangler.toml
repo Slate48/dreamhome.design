@@ -2,8 +2,39 @@ name = "wl-dreamhome-api"
 main = "src/index.js"
 compatibility_date = "2024-11-01"
 
+# Keep the workers.dev URL alive alongside the new zone Routes below — the
+# currently-deployed frontend build's default API_BASE (src/api/publicContent.js)
+# still points at wl-dreamhome-api.levi-371.workers.dev, and adding [[routes]]
+# silently disables workers_dev unless this is set explicitly. Do not remove
+# until the frontend has fully cut over to the same-origin route.
+workers_dev = true
+
 # D1: wl-dreamhome-db (fleet account). database_id filled after `d1 create`.
 [[d1_databases]]
 binding = "DB"
 database_name = "wl-dreamhome-db"
 database_id = "d62580c4-0719-4fa8-bea9-40e65ac06e53"
+
+# R2: uploaded media (portal/admin CRUD image+video uploads).
+[[r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "wl-dreamhome-media"
+
+# Worker Routes — same-origin with the wl-dreamhome-site Pages project on the
+# dreamhome.design zone (apex + www + portal), so the cookie-based session
+# works without CORS/credentials complexity. `*.dreamhome.design/api/*` does
+# NOT match the bare apex, so both patterns are needed to cover all three
+# hostnames (dreamhome.design, www.dreamhome.design, portal.dreamhome.design).
+[[routes]]
+pattern = "dreamhome.design/api/*"
+zone_name = "dreamhome.design"
+
+[[routes]]
+pattern = "*.dreamhome.design/api/*"
+zone_name = "dreamhome.design"
+
+[vars]
+# R2 public "dev URL" for the bucket above (`wrangler r2 bucket dev-url enable wl-dreamhome-media`).
+MEDIA_BASE_URL = "https://pub-c9ac284ec9d9413b8aa88acb3167e31d.r2.dev"
+
+# JWT_SECRET is a secret, set via `wrangler secret put JWT_SECRET` — do NOT put it here.

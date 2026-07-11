@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { adminApi } from '@/api/adminEntities';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,16 +43,16 @@ export default function AdminSettings() {
   useEffect(() => { load(); }, []);
 
   async function load() {
-    const data = await base44.entities.SiteSettings.filter({ key: 'main' });
+    const data = await adminApi.filter('SiteSettings', { key: 'main' });
     if (data.length) { setRecord(data[0]); setForm(data[0]); }
   }
 
   async function handleSave() {
     setSaving(true);
     if (record) {
-      await base44.entities.SiteSettings.update(record.id, form);
+      await adminApi.update('SiteSettings', record.id, form);
     } else {
-      await base44.entities.SiteSettings.create({ ...form, key: 'main' });
+      await adminApi.create('SiteSettings', { ...form, key: 'main' });
     }
     toast({ title: 'Settings saved', description: 'Changes will appear across the site.' });
     await load();

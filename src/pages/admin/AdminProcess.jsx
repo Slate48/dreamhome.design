@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
-import { Pencil, X, Check } from 'lucide-react';
+import { adminApi } from '@/api/adminEntities';
+import { Pencil, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,7 +16,7 @@ export default function AdminProcess() {
   useEffect(() => { load(); }, []);
 
   async function load() {
-    const data = await base44.entities.ProcessStage.list('stage_number', 20);
+    const data = await adminApi.list('ProcessStage', 'stage_number', 20);
     setStages(data);
   }
 
@@ -24,7 +24,7 @@ export default function AdminProcess() {
 
   async function handleSave() {
     setSaving(true);
-    await base44.entities.ProcessStage.update(editing.id, form);
+    await adminApi.update('ProcessStage', editing.id, form);
     toast({ title: 'Stage updated' });
     setEditing(null);
     await load();

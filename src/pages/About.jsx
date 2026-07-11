@@ -4,7 +4,7 @@ import PageHeader from '../components/shared/PageHeader';
 import SectionReveal from '../components/shared/SectionReveal';
 import { Heart, Eye, Users } from 'lucide-react';
 
-const aboutHero = 'https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/920e96a43_Screenshot2026-04-22094325.jpg';
+const aboutHero = 'https://pub-c9ac284ec9d9413b8aa88acb3167e31d.r2.dev/hero/about.jpg';
 
 const values = [
   { icon: Heart, title: 'Craftsmanship', desc: 'Every detail matters. From the selection of premium hardwoods to the precision of our CNC machining, we treat each project as a masterwork — because that\'s exactly what it is.' },
@@ -45,11 +45,11 @@ export default function About() {
           <SectionReveal>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <img src="https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/b9de115e3_Screenshot2026-05-20at10320PM.png" alt="Rebecca Siewin" className="w-full h-80 object-cover object-top rounded-lg shadow-xl" />
+                <img src="https://pub-c9ac284ec9d9413b8aa88acb3167e31d.r2.dev/team/rebecca.png" alt="Rebecca Siewin" className="w-full h-80 object-cover object-top rounded-lg shadow-xl" />
                 <p className="text-center font-body text-sm text-muted-foreground mt-2">Rebecca</p>
               </div>
               <div className="mt-8">
-                <img src="https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/6704075b6_Screenshot2026-05-20at10140PM.png" alt="Bryan Siewin" className="w-full h-80 object-cover object-top rounded-lg shadow-xl" />
+                <img src="https://pub-c9ac284ec9d9413b8aa88acb3167e31d.r2.dev/team/bryan.png" alt="Bryan Siewin" className="w-full h-80 object-cover object-top rounded-lg shadow-xl" />
                 <p className="text-center font-body text-sm text-muted-foreground mt-2">Bryan</p>
               </div>
             </div>

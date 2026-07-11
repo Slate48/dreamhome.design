@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
-import { Pencil, X, Check, Plus, Trash2 } from 'lucide-react';
+import { adminApi } from '@/api/adminEntities';
+import { Pencil, Check, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,8 +20,8 @@ export default function AdminInvestment() {
 
   async function load() {
     const [tierData, settingsData] = await Promise.all([
-      base44.entities.InvestmentTier.list('step_number', 10),
-      base44.entities.SiteSettings.filter({ key: 'main' })
+      adminApi.list('InvestmentTier', 'step_number', 10),
+      adminApi.filter('SiteSettings', { key: 'main' })
     ]);
     setTiers(tierData);
     if (settingsData.length) {
@@ -34,7 +34,7 @@ export default function AdminInvestment() {
 
   async function handleSave() {
     setSaving(true);
-    await base44.entities.InvestmentTier.update(editing.id, form);
+    await adminApi.update('InvestmentTier', editing.id, form);
     toast({ title: 'Step updated' });
     setEditing(null);
     await load();
@@ -43,7 +43,7 @@ export default function AdminInvestment() {
 
   async function saveSettings() {
     setSaving(true);
-    await base44.entities.SiteSettings.update(settings.id, {
+    await adminApi.update('SiteSettings', settings.id, {
       billing_contact_name: settingsForm.billing_contact_name,
       email_billing: settingsForm.email_billing
     });

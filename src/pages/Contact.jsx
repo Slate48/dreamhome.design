@@ -46,7 +46,7 @@ export default function Contact() {
       <PageHeader
         title="Let's Talk"
         subtitle="Start your journey to extraordinary spaces"
-        imageUrl="https://media.base44.com/images/public/6a0c98b9972c40dc9ebe5d05/7ebfa3d58_generated_8388bd8f.png"
+        imageUrl="https://pub-c9ac284ec9d9413b8aa88acb3167e31d.r2.dev/hero/contact.png"
       />
 
       <section className="py-24 px-4 bg-white">
