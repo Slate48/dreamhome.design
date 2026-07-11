@@ -45,11 +45,14 @@ import Billing from './pages/portal/Billing';
 import Help from './pages/portal/Help';
 
 // Client portal is also served on its own subdomain (portal.dreamhome.design), from the
-// same bundle as the marketing site. On that hostname, an already-authenticated client
-// landing on "/" should go straight to the dashboard instead of seeing the marketing home page.
-// NOTE: this only fires for authenticated clients — if it fired unconditionally, an
-// unauthenticated visit would bounce "/" -> "/portal" -> RoleGuard's redirectTo="/" -> "/portal"
-// forever, since RoleGuard sends non-client/unauthenticated users on /portal back to "/".
+// same bundle as the marketing site. On that hostname, "/" should lead into the portal
+// experience rather than the marketing home page: an authenticated client goes straight
+// to the dashboard, and anyone else (anonymous, or staff) goes to the login screen (which
+// itself routes staff to /admin and clients to /portal on success — see Login.jsx).
+// NOTE: this used to be base44-hosted-redirect based and could loop ("/" -> "/portal" ->
+// RoleGuard's redirectTo="/" -> "/portal" ...). Now that login is a real client-side route
+// (/login, no server redirect), that loop risk is gone — /login always resolves and never
+// redirects itself, so this can safely fire for unauthenticated visitors too.
 const PORTAL_HOSTNAME = 'portal.dreamhome.design';
 
 const AuthenticatedApp = () => {
@@ -57,6 +60,7 @@ const AuthenticatedApp = () => {
 
   const isPortalHost = typeof window !== 'undefined' && window.location.hostname === PORTAL_HOSTNAME;
   const shouldRedirectRootToPortal = isPortalHost && isAuthenticated && user?.role === 'client';
+  const shouldRedirectRootToLogin = isPortalHost && !isAuthenticated;
 
   if (isLoadingAuth) {
     return (
@@ -73,7 +77,11 @@ const AuthenticatedApp = () => {
     <Routes>
       {/* Public website */}
       <Route element={<PublicLayout />}>
-        <Route path="/" element={shouldRedirectRootToPortal ? <Navigate to="/portal" replace /> : <Home />} />
+        <Route path="/" element={
+          shouldRedirectRootToPortal ? <Navigate to="/portal" replace /> :
+          shouldRedirectRootToLogin ? <Navigate to="/login" replace /> :
+          <Home />
+        } />
         <Route path="/about" element={<About />} />
         <Route path="/process" element={<Process />} />
         <Route path="/portfolio" element={<Portfolio />} />
