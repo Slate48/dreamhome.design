@@ -21,10 +21,15 @@ non-identifying stack blurb and never the agency name. Keep it that way.
 ## Stack
 - **Frontend:** React 18 + Vite 6 + Tailwind + shadcn/ui (Radix), react-router-dom v6,
   @tanstack/react-query, framer-motion. No TypeScript source (jsconfig only).
-- **Build:** `npm run build` → `dist/` (Vite). Requires `VITE_BASE44_APP_ID` at build
-  time until Phase 1 strips the base44 plugin (see docs/ROADMAP.md).
-- **Backend (current):** base44 hosted BaaS — DEAD once migrated. **Target:** Cloudflare
-  Pages (frontend) + Workers (API) + D1 (data) + R2 (files) + our auth.
+- **Build:** `npm run build` → `dist/` (Vite). **base44 fully removed from the build**
+  (2026-07-16: `@base44/vite-plugin` dropped, the `@`→src alias it injected moved into
+  `vite.config.js`). No base44 env needed; output bundle is byte-identical to the
+  pre-strip build.
+- **Backend:** 100% Cloudflare — Pages (frontend) + Worker `wl-dreamhome-api` (API) +
+  D1 `wl-dreamhome-db` (data) + R2 `wl-dreamhome-media` (files) + our cookie/JWT auth.
+  base44 is disconnected from the repo (no runtime imports, no build plugin). **NOTE:**
+  the client PORTAL data layer (Project/Document/Selection/Message/Invoice) is NOT yet
+  migrated — it was placeholder-only with zero base44 records; tracked as its own project.
 
 ## Deploy target (fleet Cloudflare account)
 Deploys to the **48Labs fleet Cloudflare account** (`cfOwnership: fleet-shared` — no

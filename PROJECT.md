@@ -53,8 +53,10 @@ package.json but UNUSED in source** — dead scaffolding, decision deferred to P
   Build clean; base44 backend calls dead at runtime (expected for Phase 0).
 - **Worker/D1/R2:** `wl-dreamhome-api` / `wl-dreamhome-db` / (R2 TBD) — NOT created
   yet (later migration phases).
-- **base44 build env:** `VITE_BASE44_APP_ID=6a0c98b9972c40dc9ebe5d05` (from
-  `base44/.app.jsonc`) is the only env needed for a clean build today.
+- **base44 removed from build (2026-07-16):** base44 was disconnected from the repo;
+  `@base44/vite-plugin` dropped from `vite.config.js` + `package.json`, and the `@`→src
+  alias it injected moved into `vite.config.js`. No `VITE_BASE44_APP_ID` needed — the
+  build has zero base44 dependency and its output is byte-identical to the pre-strip build.
 - **Deploy pipeline (gated) — see docs/DEPLOYMENT.md.** Staged, with a manual approval
   gate before live. Topology is **inverted** because base44 pushes to `main` and can't
   be repointed: `main` = **staging** → `dev.dreamhome.design` (auto, ungated, project

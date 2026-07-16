@@ -56,15 +56,17 @@ token isn't scriptable for raw CF-API calls. Unblock via the CF dashboard OR a f
 token with Zone:Create+DNS:Edit+Pages:Edit. Email preservation is a hard gate — every
 record to mirror is in docs/DNS_CUTOVER.md.
 
-## Phase 1 — Strip @base44/sdk + SDK shim/abstraction layer  ⏳ planned (portal/admin remainder)
-Introduce a thin data-access abstraction (`src/api/client.js`) so pages stop calling
-`base44.*` directly. Route all `entities.*` / `auth.*` / `UploadFile` through it,
-behind the existing react-query hooks. Remove `@base44/vite-plugin` from
-`vite.config.js`, delete `src/api/base44Client.js` + base44 bits of
-`src/lib/app-params.js`, drop `@base44/sdk`/`@base44/vite-plugin` from package.json.
-Map env `VITE_BASE44_*` → `VITE_*` brand/tenant vars. Exit: build clean with NO
-`@base44`/`base44.com` references; app still renders (shim can point at a temporary
-mock/stub until P3). Also cleans the "Base44 APP" `<title>`.
+## Phase 1 — Strip @base44/sdk + build plugin  ✅ DONE (2026-07-16)
+Achieved ahead of the original plan: the public site + admin CMS + auth migration
+(`dba6f02`) already moved every page onto dedicated CF API clients
+(`src/api/publicContent.js`, `src/api/adminEntities.js`, `src/lib/AuthContext.jsx`,
+`src/lib/uploadFile.js`), so **no** `@base44/sdk` shim was ever needed — there are zero
+`base44.*` runtime imports. On 2026-07-16 base44 was disconnected from the repo and the
+last build coupling was removed: `@base44/vite-plugin` dropped from `vite.config.js` +
+`package.json`, and the `@`→src alias it injected moved into `vite.config.js`. Build is
+clean with NO `@base44` references; output bundle is byte-identical to the pre-strip
+build; title was already `Dream Home Design | Custom Homes`. (`VITE_BASE44_APP_ID` is no
+longer read anywhere; a stale copy in the Pages build vars is harmless and being removed.)
 
 ## Phase 2 — D1 schema + seed → `wl-dreamhome-db`  ⏳ planned
 Derive the schema from the 14 entities (enums, defaults, FKs on `project_id`, JSON
