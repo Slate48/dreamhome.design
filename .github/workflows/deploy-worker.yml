@@ -4,7 +4,14 @@ name: Deploy Worker (wl-dreamhome-api)
 #
 # The Pages SITE auto-deploys via Cloudflare's native git integration (Settings ->
 # Build). That integration does NOT touch the Worker, so this workflow covers it:
-# on any push to `main` that changes workers/api/**, redeploy wl-dreamhome-api.
+# on any push to `production` that changes workers/api/**, redeploy wl-dreamhome-api.
+#
+# TRIGGER BRANCH = `production` (the protected LIVE branch), NOT `main`. `main` is
+# the STAGING branch (base44 pushes there; it builds dev.dreamhome.design). Because
+# wl-dreamhome-api is a SHARED worker (both envs hit the same origin), gating its
+# deploy on `production` keeps the live backend behind the same approval PR as the
+# site. Test worker changes locally (`node cf-wrangler.cjs dev`) before promoting.
+# See docs/DEPLOYMENT.md for the full pipeline.
 #
 # D1 (wl-dreamhome-db) is intentionally NOT auto-migrated here. The prod DB was
 # seeded via `wrangler d1 execute --file` (not tracked migrations), and
@@ -19,7 +26,7 @@ name: Deploy Worker (wl-dreamhome-api)
 
 on:
   push:
-    branches: [main]
+    branches: [production]
     paths:
       - 'workers/api/**'
   workflow_dispatch: {}

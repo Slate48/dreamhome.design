@@ -55,6 +55,14 @@ package.json but UNUSED in source** — dead scaffolding, decision deferred to P
   yet (later migration phases).
 - **base44 build env:** `VITE_BASE44_APP_ID=6a0c98b9972c40dc9ebe5d05` (from
   `base44/.app.jsonc`) is the only env needed for a clean build today.
+- **Deploy pipeline (gated) — see docs/DEPLOYMENT.md.** Staged, with a manual approval
+  gate before live. Topology is **inverted** because base44 pushes to `main` and can't
+  be repointed: `main` = **staging** → `dev.dreamhome.design` (auto, ungated, project
+  `wl-dreamhome-site-dev`); protected `production` = **live** → `dreamhome.design` +
+  `portal.*` + `www.*` (project `wl-dreamhome-site`). Going live = merge a PR
+  `main → production` (ruleset `protect-production`). Backend is shared (one Worker/D1/R2);
+  the Worker deploy workflow is gated on `production` too. base44 keeps pushing `main`
+  unchanged — its edits land on staging, not live.
 
 ## Levi blockers (Phase 0 output — action needed)
 1. **Custom domain `dreamhome.design` is NOT in the fleet CF account.** The zone is
