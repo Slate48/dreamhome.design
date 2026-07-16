@@ -8,6 +8,12 @@ export const COOKIE = 'dreamhome_session'
 const PBKDF2_ITERATIONS = 100000
 const KEY_LENGTH_BITS = 256 // 32 bytes
 
+// "Remember me" = trusted device: a persistent cookie that survives browser restarts.
+// Without it, the cookie is a session cookie (dies on browser close) and the frontend
+// idle-logout hook signs the user out after inactivity. See docs/superpowers/specs.
+export const REMEMBER_MAX_AGE_S = 30 * 24 * 60 * 60 // 30 days
+const SESSION_JWT_TTL_S = 86400 // 1 day (session-cookie / non-remembered)
+
 // ---- base64url helpers ----
 
 function bytesToBase64Url(bytes) {
@@ -143,8 +149,11 @@ export async function verifyJwt(token, secret) {
 
 // ---- cookie helpers ----
 
-export function buildSessionCookie(token) {
-  return `${COOKIE}=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=86400`
+// persistent === true  -> long-lived cookie (survives browser restarts, ~30 days).
+// persistent falsy      -> session cookie (no Max-Age/Expires -> cleared on browser close).
+export function buildSessionCookie(token, { persistent = false } = {}) {
+  const base = `${COOKIE}=${token}; HttpOnly; Secure; SameSite=Strict; Path=/`
+  return persistent ? `${base}; Max-Age=${REMEMBER_MAX_AGE_S}` : base
 }
 
 export function clearSessionCookie() {
@@ -170,7 +179,10 @@ export async function getSession(context) {
     .bind(payload.sub)
     .first()
   if (!user) return null
-  return user
+  // `persistent` reflects the "remember me" claim on the session token; it drives the
+  // frontend idle-logout (non-persistent sessions get signed out after inactivity).
+  // It is NOT trusted for authorization — role is always the live D1 value above.
+  return { ...user, persistent: payload.rmb === true }
 }
 
 export async function requireAuth(context) {

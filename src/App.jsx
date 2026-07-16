@@ -4,6 +4,7 @@ import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { useIdleLogout } from '@/lib/useIdleLogout';
 
 import RoleGuard from './components/RoleGuard';
 
@@ -45,22 +46,32 @@ import Billing from './pages/portal/Billing';
 import Help from './pages/portal/Help';
 
 // Client portal is also served on its own subdomain (portal.dreamhome.design), from the
-// same bundle as the marketing site. On that hostname, "/" should lead into the portal
-// experience rather than the marketing home page: an authenticated client goes straight
-// to the dashboard, and anyone else (anonymous, or staff) goes to the login screen (which
-// itself routes staff to /admin and clients to /portal on success — see Login.jsx).
-// NOTE: this used to be base44-hosted-redirect based and could loop ("/" -> "/portal" ->
-// RoleGuard's redirectTo="/" -> "/portal" ...). Now that login is a real client-side route
-// (/login, no server redirect), that loop risk is gone — /login always resolves and never
-// redirects itself, so this can safely fire for unauthenticated visitors too.
+// same bundle as the marketing site. On that hostname, "/" is a portal entry point rather
+// than the marketing home page: an authenticated user goes straight to their dashboard
+// (clients -> /portal, staff -> /admin) and anonymous visitors go to /login. /login itself
+// mirrors this — an already-authenticated visitor is forwarded to their dashboard — so a
+// logged-in user never sees the marketing home or a login form on the portal host.
+// NOTE: /login is a real client-side route that never redirects itself, so the old base44
+// redirect loop ("/" -> "/portal" -> RoleGuard's redirectTo="/" -> "/portal" ...) can't recur.
 const PORTAL_HOSTNAME = 'portal.dreamhome.design';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isAuthenticated, user } = useAuth();
 
+  // Idle auto-logout for non-persistent ("remember me" unchecked) sessions.
+  useIdleLogout();
+
   const isPortalHost = typeof window !== 'undefined' && window.location.hostname === PORTAL_HOSTNAME;
-  const shouldRedirectRootToPortal = isPortalHost && isAuthenticated && user?.role === 'client';
-  const shouldRedirectRootToLogin = isPortalHost && !isAuthenticated;
+  // On the portal host, "/" is a portal entry point, never the marketing home:
+  // signed-in users go straight to their dashboard (clients -> /portal, staff -> /admin),
+  // and everyone else lands on the login screen.
+  const portalRootRedirect = !isPortalHost
+    ? null
+    : !isAuthenticated
+    ? '/login'
+    : user?.role === 'client'
+    ? '/portal'
+    : '/admin';
 
   if (isLoadingAuth) {
     return (
@@ -78,9 +89,7 @@ const AuthenticatedApp = () => {
       {/* Public website */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={
-          shouldRedirectRootToPortal ? <Navigate to="/portal" replace /> :
-          shouldRedirectRootToLogin ? <Navigate to="/login" replace /> :
-          <Home />
+          portalRootRedirect ? <Navigate to={portalRootRedirect} replace /> : <Home />
         } />
         <Route path="/about" element={<About />} />
         <Route path="/process" element={<Process />} />

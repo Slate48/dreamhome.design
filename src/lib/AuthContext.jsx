@@ -12,6 +12,10 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  // Whether this session is a persistent ("remember me") one. Drives idle-logout:
+  // non-persistent sessions are signed out after inactivity. The cookie is HttpOnly,
+  // so the server tells us via /api/auth/me rather than us reading the cookie.
+  const [persistent, setPersistent] = useState(false);
 
   // Re-checks the current session against the Worker and syncs state.
   // Exposed so Login.jsx can re-sync immediately after a successful login
@@ -23,14 +27,17 @@ export const AuthProvider = ({ children }) => {
         const data = await res.json();
         setUser(data);
         setIsAuthenticated(true);
+        setPersistent(data.persistent === true);
       } else {
         setUser(null);
         setIsAuthenticated(false);
+        setPersistent(false);
       }
     } catch (error) {
       console.error('Auth check failed:', error);
       setUser(null);
       setIsAuthenticated(false);
+      setPersistent(false);
     } finally {
       setIsLoadingAuth(false);
     }
@@ -40,7 +47,8 @@ export const AuthProvider = ({ children }) => {
     checkUserAuth();
   }, [checkUserAuth]);
 
-  const logout = useCallback(async () => {
+  // redirectTo defaults to '/' (manual Sign Out); idle-logout passes '/login'.
+  const logout = useCallback(async (redirectTo = '/') => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch (error) {
@@ -48,7 +56,8 @@ export const AuthProvider = ({ children }) => {
     }
     setUser(null);
     setIsAuthenticated(false);
-    navigate('/');
+    setPersistent(false);
+    navigate(redirectTo);
   }, [navigate]);
 
   const navigateToLogin = useCallback(() => {
@@ -60,6 +69,7 @@ export const AuthProvider = ({ children }) => {
       user,
       isAuthenticated,
       isLoadingAuth,
+      persistent,
       logout,
       navigateToLogin,
       checkUserAuth,

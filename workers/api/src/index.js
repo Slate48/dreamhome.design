@@ -14,7 +14,7 @@
  */
 
 import { json, parseJson, nowIso, newId, CORS } from './lib/http.js'
-import { verifyPassword, signJwt, buildSessionCookie, clearSessionCookie, requireRole, getSession } from './lib/auth.js'
+import { verifyPassword, signJwt, buildSessionCookie, clearSessionCookie, requireRole, getSession, REMEMBER_MAX_AGE_S } from './lib/auth.js'
 import { ENTITIES, CMS_ENTITIES, getEntity, hydrate, dehydrate } from './lib/entities.js'
 
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024 // 20MB
@@ -106,18 +106,26 @@ export default {
         return json({ error: 'Invalid email or password' }, 401)
       }
 
-      const token = await signJwt({ sub: user.id, email: user.email, role: user.role }, env.JWT_SECRET)
+      // "Remember me" = trusted device: persistent 30-day cookie + matching JWT TTL.
+      // Otherwise a session cookie (dies on browser close) with the default 1-day TTL;
+      // the frontend idle-logout hook signs non-persistent sessions out after inactivity.
+      const remember = body.remember === true
+      const token = await signJwt(
+        { sub: user.id, email: user.email, role: user.role, rmb: remember },
+        env.JWT_SECRET,
+        remember ? REMEMBER_MAX_AGE_S : undefined
+      )
       return json(
         { success: true, user: { id: user.id, email: user.email, role: user.role, full_name: user.full_name } },
         200,
-        { 'Set-Cookie': buildSessionCookie(token) }
+        { 'Set-Cookie': buildSessionCookie(token, { persistent: remember }) }
       )
     }
 
     if (pathname === '/api/auth/me' && method === 'GET') {
       const user = await getSession(context)
       if (!user) return json({ error: 'Not authenticated' }, 401)
-      return json({ id: user.id, email: user.email, role: user.role, full_name: user.full_name })
+      return json({ id: user.id, email: user.email, role: user.role, full_name: user.full_name, persistent: user.persistent === true })
     }
 
     if (pathname === '/api/auth/logout' && method === 'POST') {
