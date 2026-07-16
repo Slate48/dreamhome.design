@@ -56,8 +56,9 @@ package.json but UNUSED in source** — dead scaffolding, decision deferred to P
 - **base44 build env:** `VITE_BASE44_APP_ID=6a0c98b9972c40dc9ebe5d05` (from
   `base44/.app.jsonc`) is the only env needed for a clean build today.
 - **Deploy pipeline (gated):** `dev` branch → staging `dev.dreamhome.design`; a
-  reviewed PR merge `dev → main` promotes to production `dreamhome.design`. `main` is
-  branch-protected (no direct pushes). Full details + one-time CF/base44 setup:
+  reviewed PR merge `dev → main` promotes to production `dreamhome.design` (CF deploys
+  prod only from `main`). Server-enforced direct-push protection on `main` needs a paid
+  GitHub plan (currently convention-enforced). Full details + one-time CF/base44 setup:
   **docs/DEPLOYMENT.md**.
 
 ## Levi blockers (Phase 0 output — action needed)

@@ -17,8 +17,8 @@ feature / base44 work ──► push to  dev  ──► auto-deploy ──► ht
                                                          push to  main  ──► auto-deploy ──► https://dreamhome.design (LIVE)
 ```
 
-- **Nothing reaches production except a merge into `main`.** `main` is branch-protected
-  (direct pushes blocked — see below).
+- **Nothing reaches production except a merge into `main`.** Cloudflare deploys prod only
+  from `main` (server-enforced direct-push protection needs a paid GitHub plan — see below).
 - **`dev` is the staging branch.** Push to it freely; it redeploys `dev.dreamhome.design`.
 - **The approval gate is the PR merge.** Reviewing the live dev site, then merging the
   `dev → main` PR, is the act of approving a release.
@@ -56,21 +56,32 @@ clobber a `dreamhome.design` / `portal.dreamhome.design` session (and vice-versa
 The Worker route `*.dreamhome.design/api/*` already covers `dev.dreamhome.design`, so
 login/portal/admin work on dev with no backend change.
 
-## Branch protection (the gate)
+## The approval gate — two layers
 
-`main` is protected via GitHub branch protection:
+1. **Deploy wiring (the real gate, active now):** Cloudflare Pages deploys **production
+   only from `main`**. Nothing pushed to `dev` can reach `dreamhome.design`; only a merge
+   into `main` does. This holds regardless of GitHub plan and is the mechanism that makes
+   "review on dev, then approve to prod" work.
+2. **Direct-push protection (NOT active — needs a paid GitHub plan):** server-enforced
+   "require a PR before merging to `main`" — via GitHub branch protection **or** rulesets
+   — is **unavailable on this repo's current plan**. Both API endpoints return
+   `403 "Upgrade to GitHub Pro or make this repository public."` Making the repo public is
+   off the table (white-label confidentiality — see [../CLAUDE.md](../CLAUDE.md)). So today
+   the PR flow is enforced by **convention + pointing base44 at `dev`** (base44 cannot push
+   to a branch it is not connected to). A deliberate manual `git push origin main` is still
+   technically possible for someone with push access.
 
-- **Require a pull request before merging** (direct pushes to `main` are blocked).
-- Required approving reviews: **0** — the repo owner merges their own PR; the merge is
-  the approval. (Raise to 1 if a second reviewer is ever added.)
-- `enforce_admins`: **off** — an admin can still push directly in a real emergency.
-  Flip on for a hard gate.
-
-To tighten later (require a review, enforce for admins):
+**To get the hard gate:** upgrade the `Slate48` account to **GitHub Pro or Team**, then run:
 ```
-gh api -X PUT repos/Slate48/dreamhome.design/branches/main/protection \
-  -f 'required_pull_request_reviews[required_approving_review_count]=1' \
-  -F enforce_admins=true -F required_status_checks=null -F restrictions=null
+gh api -X POST repos/Slate48/dreamhome.design/rulesets --input - <<'JSON'
+{ "name":"protect-main","target":"branch","enforcement":"active",
+  "conditions":{"ref_name":{"include":["refs/heads/main"],"exclude":[]}},
+  "rules":[{"type":"pull_request","parameters":{"required_approving_review_count":0,
+    "dismiss_stale_reviews_on_push":false,"require_code_owner_review":false,
+    "require_last_push_approval":false,"required_review_thread_resolution":false,
+    "allowed_merge_methods":["merge","squash","rebase"]}},
+   {"type":"deletion"},{"type":"non_fast_forward"}] }
+JSON
 ```
 
 ## The Worker (backend) deploy
