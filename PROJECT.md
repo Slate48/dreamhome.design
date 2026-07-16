@@ -58,13 +58,13 @@ package.json but UNUSED in source** — dead scaffolding, decision deferred to P
   alias it injected moved into `vite.config.js`. No `VITE_BASE44_APP_ID` needed — the
   build has zero base44 dependency and its output is byte-identical to the pre-strip build.
 - **Deploy pipeline (gated) — see docs/DEPLOYMENT.md.** Staged, with a manual approval
-  gate before live. Topology is **inverted** because base44 pushes to `main` and can't
-  be repointed: `main` = **staging** → `dev.dreamhome.design` (auto, ungated, project
-  `wl-dreamhome-site-dev`); protected `production` = **live** → `dreamhome.design` +
-  `portal.*` + `www.*` (project `wl-dreamhome-site`). Going live = merge a PR
-  `main → production` (ruleset `protect-production`). Backend is shared (one Worker/D1/R2);
-  the Worker deploy workflow is gated on `production` too. base44 keeps pushing `main`
-  unchanged — its edits land on staging, not live.
+  gate before live. **Conventional** topology (`main` = live) since 2026-07-16, once
+  base44 was disconnected and no longer forced pushes onto `main`: `staging` =
+  **staging** → `dev.dreamhome.design` (auto, ungated, project `wl-dreamhome-site-dev`);
+  protected `main` = **live** → `dreamhome.design` + `portal.*` + `www.*` (project
+  `wl-dreamhome-site`). Going live = merge a PR `staging → main` (ruleset `protect-main`).
+  Backend is shared (one Worker/D1/R2); the Worker deploy workflow is gated on `main` too.
+  The old `production` branch + `protect-production` ruleset were retired in the flip.
 
 ## Levi blockers (Phase 0 output — action needed)
 1. **Custom domain `dreamhome.design` is NOT in the fleet CF account.** The zone is
