@@ -18,16 +18,34 @@ feature / base44 work ──► push to  dev  ──► auto-deploy ──► ht
 ```
 
 - **Nothing reaches production except a merge into `main`.** Cloudflare deploys prod only
-  from `main` (server-enforced direct-push protection needs a paid GitHub plan — see below).
+  from `main`, and a GitHub ruleset blocks direct pushes to `main` (see below).
 - **`dev` is the staging branch.** Push to it freely; it redeploys `dev.dreamhome.design`.
 - **The approval gate is the PR merge.** Reviewing the live dev site, then merging the
   `dev → main` PR, is the act of approving a release.
+
+## Architecture — two Pages projects
+
+Cloudflare Pages custom domains only ever serve a project's **production** deployment —
+there is no per-branch custom domain. So staging is a **second Pages project** whose
+production branch is `dev`:
+
+| Pages project | Production branch | Custom domain(s) |
+|---|---|---|
+| `wl-dreamhome-site` | `main` | dreamhome.design, www, portal |
+| `wl-dreamhome-site-dev` | `dev` | dev.dreamhome.design |
+
+Both are git-connected to `Slate48/dreamhome.design` and share the one backend Worker
+(`wl-dreamhome-api`), so `dev.dreamhome.design/api/*` hits the same D1/R2 as production
+(the `*.dreamhome.design/api/*` Worker route already covers the dev host). The prod
+project still builds `dev` as an anonymous *preview* too (`preview_deployment_setting:
+all`) — harmless `*.pages.dev` noise; the named `dev.dreamhome.design` comes from the dev
+project.
 
 ## Environments
 
 | | Staging (`dev`) | Production (`main`) |
 |---|---|---|
-| Frontend | Cloudflare Pages preview of the `dev` branch | Cloudflare Pages production |
+| Frontend | Pages project `wl-dreamhome-site-dev` (prod branch `dev`) | Pages project `wl-dreamhome-site` (prod branch `main`) |
 | URL | https://dev.dreamhome.design | https://dreamhome.design (+ `www`, `portal`) |
 | Backend (Worker/D1/R2) | **shared with production** — `wl-dreamhome-api` + `wl-dreamhome-db` + `wl-dreamhome-media` | same |
 | Auth session | host-only cookie on `dev.dreamhome.design` (independent of prod — see below) | host-only cookie on the live hosts |
@@ -62,27 +80,18 @@ login/portal/admin work on dev with no backend change.
    only from `main`**. Nothing pushed to `dev` can reach `dreamhome.design`; only a merge
    into `main` does. This holds regardless of GitHub plan and is the mechanism that makes
    "review on dev, then approve to prod" work.
-2. **Direct-push protection (NOT active — needs a paid GitHub plan):** server-enforced
-   "require a PR before merging to `main`" — via GitHub branch protection **or** rulesets
-   — is **unavailable on this repo's current plan**. Both API endpoints return
-   `403 "Upgrade to GitHub Pro or make this repository public."` Making the repo public is
-   off the table (white-label confidentiality — see [../CLAUDE.md](../CLAUDE.md)). So today
-   the PR flow is enforced by **convention + pointing base44 at `dev`** (base44 cannot push
-   to a branch it is not connected to). A deliberate manual `git push origin main` is still
-   technically possible for someone with push access.
+2. **Direct-push protection (ACTIVE):** a GitHub **ruleset** `protect-main` (id
+   `19066025`, enforcement `active`) requires a pull request to merge into `main` and
+   blocks direct pushes, branch deletion, and force-pushes. Required approvals: **0**
+   (the owner self-merges; the merge is the approval). This became available once the repo
+   was made public. To tighten (require a reviewer, once a second maintainer exists), bump
+   `required_approving_review_count` to `1` via `gh api -X PUT repos/Slate48/dreamhome.design/rulesets/19066025`.
 
-**To get the hard gate:** upgrade the `Slate48` account to **GitHub Pro or Team**, then run:
-```
-gh api -X POST repos/Slate48/dreamhome.design/rulesets --input - <<'JSON'
-{ "name":"protect-main","target":"branch","enforcement":"active",
-  "conditions":{"ref_name":{"include":["refs/heads/main"],"exclude":[]}},
-  "rules":[{"type":"pull_request","parameters":{"required_approving_review_count":0,
-    "dismiss_stale_reviews_on_push":false,"require_code_owner_review":false,
-    "require_last_push_approval":false,"required_review_thread_resolution":false,
-    "allowed_merge_methods":["merge","squash","rebase"]}},
-   {"type":"deletion"},{"type":"non_fast_forward"}] }
-JSON
-```
+> **Confidentiality note:** the repo is currently **public**, which is what unlocked the
+> ruleset. This exposes the white-label tenancy details in `CLAUDE.md`/`PROJECT.md` and
+> the infra IDs — a deliberate trade accepted on 2026-07-16. Revisit if the client
+> relationship needs to stay private (then: private repo + GitHub Pro/Team for the same
+> ruleset).
 
 ## The Worker (backend) deploy
 
@@ -105,20 +114,22 @@ away from production:
    review (the backend is 100% Cloudflare now; base44's SDK is a hard-cut dependency —
    see [../CLAUDE.md](../CLAUDE.md)).
 
-## One-time setup still required (Cloudflare dashboard / base44)
+## Setup status
 
-These need fleet-CF-account dashboard access or a token with `DNS:Edit` + `Pages:Edit`,
-so they are **manual** (see the checklist handed off separately):
+Done (2026-07-16, via the fleet CF token + `gh`):
+- ✅ `dev` branch created and pushed.
+- ✅ GitHub ruleset `protect-main` active (PR required to merge `main`).
+- ✅ Pages project `wl-dreamhome-site-dev` created (git-connected, prod branch `dev`,
+  build env `VITE_BASE44_APP_ID` + `NODE_VERSION` set).
+- ✅ Custom domain `dev.dreamhome.design` added to the dev project (cert provisions
+  automatically; allow a few minutes for `active`).
 
-1. **Attach `dev.dreamhome.design` to the `dev` branch preview.** Add a proxied DNS
-   `CNAME` in the `dreamhome.design` zone: `dev` → `dev.wl-dreamhome-site.pages.dev`
-   (the Pages branch alias for `dev`).
-2. **Set the Pages *preview* build env var** `VITE_BASE44_APP_ID=6a0c98b9972c40dc9ebe5d05`
-   (Pages → Settings → Environment variables → *Preview*). The build fails without it
-   until the base44 vite-plugin is removed (roadmap P1). Production already has it.
-3. **Confirm the Pages production branch is `main`** and preview builds are enabled for
-   `dev` (Pages → Settings → Builds & deployments).
-4. **Repoint base44** to `dev` (above).
+Remaining:
+1. **First dev build** — a git-connected project builds on the next push to its branch;
+   the push that added this doc triggers it. Confirm a green deployment at
+   `dev.dreamhome.design`.
+2. **Repoint base44** to the `dev` branch (or disconnect from `main`) — base44 dashboard,
+   only you can do this. This is what actually keeps base44 out of production.
 
 ## Future (deferred)
 
