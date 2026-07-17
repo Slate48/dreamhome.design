@@ -30,9 +30,16 @@ FlipPhotoPage.displayName = 'FlipPhotoPage';
 // Isolated, memoized flipbook renderer — does NOT re-render when currentPage changes.
 // This prevents React from reconciling children that react-pageflip has moved in the DOM,
 // which was causing the "removeChild" NotFoundError.
-const FlipbookRenderer = React.memo(({ items, bookDims, bookRef, onFlip }) => (
+//
+// `bookKey` forces a full remount whenever the category OR the size changes. This is
+// essential: react-pageflip relocates/clones the page <div>s into its own internal DOM,
+// so reusing one instance across a category change makes React reconcile the new item
+// list against nodes the library already moved — throwing "removeChild" NotFoundError,
+// caught upstream as "Unable to load the lookbook." A fresh instance per category has no
+// stale nodes to reconcile.
+const FlipbookRenderer = React.memo(({ items, bookDims, bookRef, onFlip, bookKey }) => (
   <HTMLFlipBook
-    key={bookDims.key}
+    key={bookKey}
     ref={bookRef}
     width={bookDims.width}
     height={bookDims.height}
@@ -138,6 +145,7 @@ export default function PortfolioFlipbook({ allItems }) {
                 bookDims={bookDims}
                 bookRef={bookRef}
                 onFlip={onFlip}
+                bookKey={`${activeCategory}::${bookDims.key}`}
               />
             </div>
 

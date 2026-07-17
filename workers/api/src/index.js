@@ -14,8 +14,10 @@
  */
 
 import { json, parseJson, nowIso, newId, CORS } from './lib/http.js'
-import { verifyPassword, signJwt, buildSessionCookie, clearSessionCookie, requireRole, getSession, REMEMBER_MAX_AGE_S } from './lib/auth.js'
+import { verifyPassword, signJwt, buildSessionCookie, clearSessionCookie, requireCapability, requireAuth, getSession, publicUser, REMEMBER_MAX_AGE_S } from './lib/auth.js'
 import { ENTITIES, CMS_ENTITIES, getEntity, hydrate, dehydrate } from './lib/entities.js'
+import { ENTITY_CAPABILITY } from './lib/rbac.js'
+import { handleAdminRoutes } from './lib/admin.js'
 
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024 // 20MB
 const ALLOWED_UPLOAD_TYPES = new Set([
@@ -125,17 +127,21 @@ export default {
     if (pathname === '/api/auth/me' && method === 'GET') {
       const user = await getSession(context)
       if (!user) return json({ error: 'Not authenticated' }, 401)
-      return json({ id: user.id, email: user.email, role: user.role, full_name: user.full_name, persistent: user.persistent === true })
+      return json(publicUser(user))
     }
 
     if (pathname === '/api/auth/logout' && method === 'POST') {
       return json({ success: true }, 200, { 'Set-Cookie': clearSessionCookie() })
     }
 
+    // ---- admin/user/tier management + invite acceptance + change-password ----
+    const adminResp = await handleAdminRoutes(context)
+    if (adminResp) return adminResp
+
     // ---- upload (any authenticated user) ----
 
     if (pathname === '/api/upload' && method === 'POST') {
-      const auth = await requireRole(context, ['client', 'manager', 'admin', 'super_admin'])
+      const auth = await requireAuth(context)
       if (auth.response) return auth.response
       return handleUpload(request, env)
     }
@@ -149,7 +155,7 @@ export default {
       const config = getEntity(entityName)
 
       if (method === 'PATCH') {
-        const auth = await requireRole(context, ['manager', 'admin', 'super_admin'])
+        const auth = await requireCapability(context, ENTITY_CAPABILITY[entityName])
         if (auth.response) return auth.response
 
         const body = await parseJson(request)
@@ -173,7 +179,7 @@ export default {
       }
 
       if (method === 'DELETE') {
-        const auth = await requireRole(context, ['manager', 'admin', 'super_admin'])
+        const auth = await requireCapability(context, ENTITY_CAPABILITY[entityName])
         if (auth.response) return auth.response
 
         const result = await env.DB.prepare(`DELETE FROM ${entityName} WHERE id = ?`).bind(id).run()
@@ -215,7 +221,7 @@ export default {
 
       // Generic staff-gated create for the 7 CMS entities.
       if (!CMS_ENTITIES.includes(entity)) return json({ error: 'read-only entity' }, 405)
-      const auth = await requireRole(context, ['manager', 'admin', 'super_admin'])
+      const auth = await requireCapability(context, ENTITY_CAPABILITY[entity])
       if (auth.response) return auth.response
 
       const body = await parseJson(request)
@@ -243,7 +249,7 @@ export default {
 
     // Staff-only entities (currently just ContactInquiry) require a role.
     if (!meta.publicRead) {
-      const auth = await requireRole(context, ['manager', 'admin', 'super_admin'])
+      const auth = await requireCapability(context, 'inquiries')
       if (auth.response) return auth.response
     }
 

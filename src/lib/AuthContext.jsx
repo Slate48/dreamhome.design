@@ -64,6 +64,13 @@ export const AuthProvider = ({ children }) => {
     navigate('/login');
   }, [navigate]);
 
+  // UI-only capability check (the Worker enforces every request). rank 0 = super admin.
+  const can = useCallback((capability) => {
+    if (!user) return false;
+    if (user.rank === 0) return true;
+    return Array.isArray(user.capabilities) && user.capabilities.includes(capability);
+  }, [user]);
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -73,6 +80,7 @@ export const AuthProvider = ({ children }) => {
       logout,
       navigateToLogin,
       checkUserAuth,
+      can,
     }}>
       {children}
     </AuthContext.Provider>
