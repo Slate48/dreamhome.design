@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { useIdleLogout } from '@/lib/useIdleLogout';
 
 import RoleGuard from './components/RoleGuard';
+import CapabilityGuard from './components/CapabilityGuard';
 
 // Admin pages
 import AdminLayout from './components/admin/AdminLayout';
@@ -19,9 +20,11 @@ import AdminInvestment from './pages/admin/AdminInvestment';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminTestimonials from './pages/admin/AdminTestimonials';
 import AdminInquiries from './pages/admin/AdminInquiries';
+import AdminUsers from './pages/admin/AdminUsers';
 
 // Auth
 import Login from './pages/Login';
+import InviteAccept from './pages/InviteAccept';
 
 // Public pages
 import Home from './pages/Home';
@@ -101,6 +104,7 @@ const AuthenticatedApp = () => {
 
       {/* Auth */}
       <Route path="/login" element={<Login />} />
+      <Route path="/invite/:token" element={<InviteAccept />} />
 
       {/* Client portal — clients only */}
       <Route element={
@@ -117,26 +121,22 @@ const AuthenticatedApp = () => {
         <Route path="/portal/help" element={<Help />} />
       </Route>
 
-      {/* Admin portal — manager / admin / super_admin */}
+      {/* Admin portal — staff, gated per-section by capability */}
       <Route element={
-        <RoleGuard allowedRoles={['manager', 'admin', 'super_admin']} redirectTo="/">
+        <RoleGuard allowedRoles={['staff']} redirectTo="/">
           <AdminLayout />
         </RoleGuard>
       }>
         <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/portfolio" element={<AdminPortfolio />} />
-        <Route path="/admin/team" element={<AdminTeam />} />
-        <Route path="/admin/faqs" element={<AdminFAQs />} />
-        <Route path="/admin/process" element={<AdminProcess />} />
-        <Route path="/admin/investment" element={<AdminInvestment />} />
-        {/* Settings restricted to admin + super_admin only */}
-        <Route path="/admin/settings" element={
-          <RoleGuard allowedRoles={['admin', 'super_admin']} redirectTo="/admin">
-            <AdminSettings />
-          </RoleGuard>
-        } />
-        <Route path="/admin/testimonials" element={<AdminTestimonials />} />
-        <Route path="/admin/inquiries" element={<AdminInquiries />} />
+        <Route path="/admin/portfolio" element={<CapabilityGuard capability="portfolio"><AdminPortfolio /></CapabilityGuard>} />
+        <Route path="/admin/team" element={<CapabilityGuard capability="team"><AdminTeam /></CapabilityGuard>} />
+        <Route path="/admin/faqs" element={<CapabilityGuard capability="faqs"><AdminFAQs /></CapabilityGuard>} />
+        <Route path="/admin/process" element={<CapabilityGuard capability="process"><AdminProcess /></CapabilityGuard>} />
+        <Route path="/admin/investment" element={<CapabilityGuard capability="investment"><AdminInvestment /></CapabilityGuard>} />
+        <Route path="/admin/testimonials" element={<CapabilityGuard capability="testimonials"><AdminTestimonials /></CapabilityGuard>} />
+        <Route path="/admin/inquiries" element={<CapabilityGuard capability="inquiries"><AdminInquiries /></CapabilityGuard>} />
+        <Route path="/admin/settings" element={<CapabilityGuard capability="settings"><AdminSettings /></CapabilityGuard>} />
+        <Route path="/admin/users" element={<CapabilityGuard capability="users"><AdminUsers /></CapabilityGuard>} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />
