@@ -217,7 +217,7 @@ async function inviteUser(context) {
   const tier = await context.env.DB.prepare('SELECT id, rank, capabilities, is_system FROM admin_tiers WHERE id = ?').bind(tierId).first()
   if (!tier) return json({ error: 'unknown tier' }, 400)
   if (tier.is_system || tier.rank === SUPER_TIER_RANK) return json({ error: 'Cannot assign the super admin tier' }, 403)
-  if (!canManage(me.rank, tier.rank)) return json({ error: 'You can only assign tiers below your own' }, 403)
+  if (!canManage(me.rank, tier.rank)) return json({ error: 'You can only assign tiers at or below your own' }, 403)
   if (!capsSubsetOf(safeParseArray(tier.capabilities), me.capabilities, me.rank)) {
     return json({ error: 'That tier grants capabilities you do not have' }, 403)
   }
@@ -293,12 +293,18 @@ async function patchUser(context, id) {
   const sets = []
   const binds = []
   if (typeof body.full_name === 'string' && body.full_name.trim()) { sets.push('full_name = ?'); binds.push(body.full_name.trim()) }
-  if ('is_active' in body) { sets.push('is_active = ?'); binds.push(body.is_active ? 1 : 0) }
+  if ('is_active' in body) {
+    const active = body.is_active ? 1 : 0
+    if (active === 0 && !canDelete(me.rank, target.tier_rank)) {
+      return json({ error: 'You cannot deactivate someone at your own level' }, 403)
+    }
+    sets.push('is_active = ?'); binds.push(active)
+  }
   if ('tier_id' in body) {
     const tier = await context.env.DB.prepare('SELECT id, rank, capabilities, is_system FROM admin_tiers WHERE id = ?').bind(body.tier_id).first()
     if (!tier) return json({ error: 'unknown tier' }, 400)
     if (tier.is_system || tier.rank === SUPER_TIER_RANK) return json({ error: 'Cannot assign the super admin tier' }, 403)
-    if (!canManage(me.rank, tier.rank)) return json({ error: 'You can only assign tiers below your own' }, 403)
+    if (!canManage(me.rank, tier.rank)) return json({ error: 'You can only assign tiers at or below your own' }, 403)
     if (!capsSubsetOf(safeParseArray(tier.capabilities), me.capabilities, me.rank)) {
       return json({ error: 'That tier grants capabilities you do not have' }, 403)
     }
@@ -320,7 +326,7 @@ async function deleteUser(context, id) {
   const target = await loadStaffTarget(context.env, id)
   if (!target) return json({ error: 'not found' }, 404)
   if (target.tier_rank === SUPER_TIER_RANK) return json({ error: 'The super admin cannot be deleted' }, 403)
-  if (!canManage(me.rank, target.tier_rank)) return json({ error: 'Insufficient privileges' }, 403)
+  if (!canDelete(me.rank, target.tier_rank)) return json({ error: 'Insufficient privileges' }, 403)
   await context.env.DB.prepare('DELETE FROM users WHERE id = ?').bind(id).run()
   return json({ success: true })
 }
