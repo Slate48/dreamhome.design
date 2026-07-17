@@ -48,12 +48,27 @@ try {
   for (const m of MIGRATIONS) wrangler([`--file=migrations/${m}.sql`])
 
   // 2. The four fixed tiers exist with the expected ranks/names.
-  const tiers = query('SELECT id, name, rank FROM admin_tiers ORDER BY rank;')
+  const tiers = query('SELECT id, name, rank, capabilities FROM admin_tiers ORDER BY rank;')
   assert(tiers.length === 4, `expected 4 tiers, got ${tiers.length}`)
   assert(tiers[0].id === 'tier_superadmin' && tiers[0].rank === 0, 'rank 0 super')
   assert(tiers[1].id === 'tier_admin' && tiers[1].name === 'Level 1' && tiers[1].rank === 1, 'rank 1 Level 1')
   assert(tiers[2].id === 'tier_manager' && tiers[2].name === 'Level 2' && tiers[2].rank === 2, 'rank 2 Level 2')
   assert(tiers[3].id === 'tier_member' && tiers[3].name === 'Member' && tiers[3].rank === 3, 'rank 3 Member')
+
+  // 2b. Migration 0005's core authorization surface: the capabilities JSON per tier.
+  const sortedCaps = (json) => JSON.parse(json).slice().sort()
+  const eqCaps = (json, expected) =>
+    JSON.stringify(sortedCaps(json)) === JSON.stringify(expected.slice().sort())
+
+  const ALL_NINE = ['portfolio','team','faqs','process','investment','testimonials','inquiries','settings','users']
+  const SEVEN_CONTENT = ['portfolio','team','faqs','process','investment','testimonials','inquiries']
+
+  // Level 2 (tier_manager) was widened to all 9 caps (incl. settings + users).
+  assert(eqCaps(tiers[2].capabilities, ALL_NINE), 'Level 2 has all 9 capabilities')
+  // Member (tier_member) has exactly the 7 content caps — and NOT settings/users.
+  assert(eqCaps(tiers[3].capabilities, SEVEN_CONTENT), 'Member has exactly the 7 content caps')
+  const memberCaps = JSON.parse(tiers[3].capabilities)
+  assert(!memberCaps.includes('settings') && !memberCaps.includes('users'), 'Member lacks settings and users')
 
   // 3. THE REGRESSION GUARD: a pending invite inserts with password_hash = NULL.
   //    Pre-0004 this threw "NOT NULL constraint failed: users.password_hash".

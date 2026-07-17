@@ -319,6 +319,21 @@ test('POST /api/admin/users/:id/reinvite: forbidden for a higher-ranked target',
   assert.equal((await handleAdminRoutes(ctx)).status, 403)
 })
 
+test('POST /api/admin/users/:id/reinvite: cannot reinvite a super-admin target', async () => {
+  let updateRan = false
+  const ctx = await ctxAs({ id: 'u_sa', role: 'staff', _row: superRow }, {
+    method: 'POST', path: '/api/admin/users/u_other/reinvite',
+    reads: (sql) => {
+      if (sql.includes("u.role = 'staff'")) return { first: { id: 'u_other', tier_rank: 0, tier_id: 'tier_superadmin', is_active: 1, has_password: 0 } }
+      if (sql.startsWith('UPDATE users SET')) { updateRan = true; return {} }
+      return {}
+    },
+  })
+  const res = await handleAdminRoutes(ctx)
+  assert.equal(res.status, 403)
+  assert.equal(updateRan, false, 'the reinvite UPDATE must not run for a super-admin target')
+})
+
 test('POST /api/admin/users: stores only the SHA-256 hash of the invite token, never the raw token', async () => {
   let insertBinds = null
   const ctx = await ctxAs({ id: 'u_sa', role: 'staff', _row: superRow }, {

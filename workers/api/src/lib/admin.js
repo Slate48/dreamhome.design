@@ -253,6 +253,7 @@ async function reinviteUser(context, id) {
   const me = auth.user
   const target = await loadStaffTarget(context.env, id)
   if (!target) return json({ error: 'not found' }, 404)
+  if (target.tier_rank === SUPER_TIER_RANK) return json({ error: 'The super admin cannot be modified' }, 403)
   if (!canManage(me.rank, target.tier_rank)) return json({ error: 'Insufficient privileges' }, 403)
   if (target.has_password) return json({ error: 'That user has already set up their account' }, 409)
 
