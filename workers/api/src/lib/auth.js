@@ -238,12 +238,3 @@ export async function requireCapability(context, capability) {
   if (user.rank === 0 || (user.capabilities || []).includes(capability)) return result
   return { response: json({ error: 'Insufficient privileges' }, 403) }
 }
-
-export async function requireRole(context, allowedRoles) {
-  const result = await requireAuth(context)
-  if (result.response) return result
-  if (!allowedRoles.includes(result.user.role)) {
-    return { response: json({ error: 'Insufficient privileges' }, 403) }
-  }
-  return result
-}
