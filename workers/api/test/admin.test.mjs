@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mockDb, mockContext } from './_mock.mjs'
-import { signJwt, COOKIE, sha256Hex } from '../src/lib/auth.js'
+import { signJwt, COOKIE, sha256Hex, hashPassword } from '../src/lib/auth.js'
 import { handleAdminRoutes } from '../src/lib/admin.js'
 
 const SECRET = 'test-secret'
@@ -250,4 +250,89 @@ test('POST /api/admin/users: stores only the SHA-256 hash of the invite token, n
   const expectedHash = await sha256Hex(rawToken)
   assert.ok(insertBinds.includes(expectedHash), 'INSERT must bind the token hash')
   assert.ok(!insertBinds.includes(rawToken), 'INSERT must NOT bind the raw token')
+})
+
+test('GET /api/auth/invite/:token: valid pending token returns the invitee', async () => {
+  const raw = 'rawtoken123'
+  const hash = await sha256Hex(raw)
+  const future = new Date(Date.now() + 1000 * 60).toISOString()
+  const db = mockDb((sql, binds) => {
+    if (sql.includes('invite_token_hash = ?') && binds[0] === hash) {
+      return { first: { email: 'new@y.com', full_name: 'New', invite_expires: future, tier_name: 'Manager' } }
+    }
+    return {}
+  })
+  const ctx = mockContext({ db, method: 'GET', path: `/api/auth/invite/${raw}` })
+  const res = await handleAdminRoutes(ctx)
+  assert.equal(res.status, 200)
+  assert.equal((await res.json()).email, 'new@y.com')
+})
+
+test('GET /api/auth/invite/:token: expired token is 404', async () => {
+  const raw = 'expired'
+  const hash = await sha256Hex(raw)
+  const past = new Date(Date.now() - 1000).toISOString()
+  const db = mockDb((sql, binds) => (sql.includes('invite_token_hash = ?') && binds[0] === hash)
+    ? { first: { email: 'x@y.com', full_name: 'X', invite_expires: past, tier_name: 'Manager' } } : {})
+  const ctx = mockContext({ db, method: 'GET', path: `/api/auth/invite/${raw}` })
+  assert.equal((await handleAdminRoutes(ctx)).status, 404)
+})
+
+test('POST /api/auth/invite/:token: sets password and issues a session cookie', async () => {
+  const raw = 'acceptme'
+  const hash = await sha256Hex(raw)
+  const future = new Date(Date.now() + 1000 * 60).toISOString()
+  const db = mockDb((sql, binds) => (sql.includes('invite_token_hash = ?') && binds[0] === hash)
+    ? { first: { id: 'u_new', email: 'new@y.com', full_name: 'New', role: 'staff', invite_expires: future } } : {})
+  const ctx = mockContext({ db, method: 'POST', path: `/api/auth/invite/${raw}`, body: { password: 'longenough1' } })
+  const res = await handleAdminRoutes(ctx)
+  assert.equal(res.status, 200)
+  assert.match(res.headers.get('Set-Cookie') || '', /dreamhome_session=/)
+})
+
+test('POST /api/auth/invite/:token: rejects a short password (400)', async () => {
+  const raw = 'shortpw'
+  const hash = await sha256Hex(raw)
+  const future = new Date(Date.now() + 1000 * 60).toISOString()
+  const db = mockDb((sql, binds) => (sql.includes('invite_token_hash = ?') && binds[0] === hash)
+    ? { first: { id: 'u_new', email: 'n@y.com', full_name: 'N', role: 'staff', invite_expires: future } } : {})
+  const ctx = mockContext({ db, method: 'POST', path: `/api/auth/invite/${raw}`, body: { password: 'short' } })
+  assert.equal((await handleAdminRoutes(ctx)).status, 400)
+})
+
+test('POST /api/auth/change-password: unauthenticated is 401', async () => {
+  const db = mockDb(() => ({}))
+  const ctx = mockContext({ db, method: 'POST', path: '/api/auth/change-password',
+    body: { current_password: 'x', new_password: 'newlongpassword' } })
+  assert.equal((await handleAdminRoutes(ctx)).status, 401)
+})
+
+test('POST /api/auth/change-password: rejects a short new password (400)', async () => {
+  const stored = await hashPassword('correcthorse')
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'POST', path: '/api/auth/change-password',
+    body: { current_password: 'correcthorse', new_password: 'short' },
+    reads: (sql) => sql.includes('SELECT password_hash FROM users') ? { first: { password_hash: stored } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 400)
+})
+
+test('POST /api/auth/change-password: rejects when current password is wrong (400)', async () => {
+  const stored = await hashPassword('correcthorse')
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'POST', path: '/api/auth/change-password',
+    body: { current_password: 'wrongpw', new_password: 'newlongpassword' },
+    reads: (sql) => sql.includes('SELECT password_hash FROM users') ? { first: { password_hash: stored } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 400)
+})
+
+test('POST /api/auth/change-password: updates the password when current is correct (200)', async () => {
+  const stored = await hashPassword('correcthorse')
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'POST', path: '/api/auth/change-password',
+    body: { current_password: 'correcthorse', new_password: 'newlongpassword' },
+    reads: (sql) => sql.includes('SELECT password_hash FROM users') ? { first: { password_hash: stored } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 200)
 })

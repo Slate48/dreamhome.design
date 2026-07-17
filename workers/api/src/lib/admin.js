@@ -3,13 +3,12 @@
 // focused. handleAdminRoutes returns a Response for a matched route, or null so
 // index.js can continue to its generic entity routing.
 //
-// NOTE: this file implements the /api/admin/tiers* branches (Task 4) and the
-// /api/admin/users* staff-management + copy-link invite branches (Task 5).
-// Task 6 extends handleAdminRoutes further with invite-accept and
-// change-password branches, adding its own imports at that point.
+// NOTE: this file implements the /api/admin/tiers* branches (Task 4), the
+// /api/admin/users* staff-management + copy-link invite branches (Task 5), and
+// the public /api/auth/invite/:token + /api/auth/change-password branches (Task 6).
 
 import { json, parseJson, nowIso, newId } from './http.js'
-import { requireStaff, requireCapability, requireAuth, getSession, sha256Hex, generateInviteToken, INVITE_TTL_S } from './auth.js'
+import { requireStaff, requireCapability, requireAuth, getSession, sha256Hex, generateInviteToken, INVITE_TTL_S, hashPassword, verifyPassword, signJwt, buildSessionCookie } from './auth.js'
 import { isValidCapabilitySet, canManage, capsSubsetOf } from './rbac.js'
 
 const SUPER_TIER_RANK = 0
@@ -42,6 +41,15 @@ export async function handleAdminRoutes(context) {
     if (method === 'DELETE') return deleteUser(context, userItem[1])
     return json({ error: 'method not allowed' }, 405)
   }
+
+  // ---- invite acceptance (public, token-gated) + self change-password ----
+  const inviteItem = pathname.match(/^\/api\/auth\/invite\/([A-Za-z0-9_-]+)$/)
+  if (inviteItem) {
+    if (method === 'GET') return getInvite(context, inviteItem[1])
+    if (method === 'POST') return acceptInvite(context, inviteItem[1])
+    return json({ error: 'method not allowed' }, 405)
+  }
+  if (pathname === '/api/auth/change-password' && method === 'POST') return changePassword(context)
 
   return null
 }
@@ -309,6 +317,71 @@ async function deleteUser(context, id) {
   if (target.tier_rank === SUPER_TIER_RANK) return json({ error: 'The super admin cannot be deleted' }, 403)
   if (!canManage(me.rank, target.tier_rank)) return json({ error: 'Insufficient privileges' }, 403)
   await context.env.DB.prepare('DELETE FROM users WHERE id = ?').bind(id).run()
+  return json({ success: true })
+}
+
+const MIN_PASSWORD_LEN = 8
+
+async function findPendingInvite(env, token) {
+  const hash = await sha256Hex(token)
+  const row = await env.DB
+    .prepare(
+      `SELECT u.id, u.email, u.full_name, u.role, u.invite_expires, t.name AS tier_name
+       FROM users u LEFT JOIN admin_tiers t ON t.id = u.tier_id
+       WHERE u.invite_token_hash = ? AND u.is_active = 0`
+    ).bind(hash).first()
+  if (!row) return null
+  if (!row.invite_expires || new Date(row.invite_expires).getTime() <= Date.now()) return null
+  return row
+}
+
+// GET /api/auth/invite/:token
+async function getInvite(context, token) {
+  const row = await findPendingInvite(context.env, token)
+  if (!row) return json({ error: 'This invite link is invalid or has expired' }, 404)
+  return json({ email: row.email, full_name: row.full_name, tier_name: row.tier_name || null })
+}
+
+// POST /api/auth/invite/:token  { password }
+async function acceptInvite(context, token) {
+  const body = await parseJson(context.request)
+  const password = body.password || ''
+  const row = await findPendingInvite(context.env, token)
+  if (!row) return json({ error: 'This invite link is invalid or has expired' }, 404)
+  if (password.length < MIN_PASSWORD_LEN) {
+    return json({ error: `Password must be at least ${MIN_PASSWORD_LEN} characters` }, 400)
+  }
+  if (!context.env.JWT_SECRET) return json({ error: 'Server auth is not configured' }, 500)
+
+  const passwordHash = await hashPassword(password)
+  await context.env.DB
+    .prepare('UPDATE users SET password_hash = ?, is_active = 1, invite_token_hash = NULL, invite_expires = NULL, updated_date = ? WHERE id = ?')
+    .bind(passwordHash, nowIso(), row.id)
+    .run()
+
+  const jwt = await signJwt({ sub: row.id, email: row.email, role: row.role, rmb: false }, context.env.JWT_SECRET)
+  return json(
+    { success: true, user: { id: row.id, email: row.email, full_name: row.full_name, role: row.role } },
+    200,
+    { 'Set-Cookie': buildSessionCookie(jwt, { persistent: false }) }
+  )
+}
+
+// POST /api/auth/change-password  { current_password, new_password }
+async function changePassword(context) {
+  const auth = await requireAuth(context)
+  if (auth.response) return auth.response
+  const body = await parseJson(context.request)
+  const current = body.current_password || ''
+  const next = body.new_password || ''
+  if (next.length < MIN_PASSWORD_LEN) return json({ error: `Password must be at least ${MIN_PASSWORD_LEN} characters` }, 400)
+
+  const row = await context.env.DB.prepare('SELECT password_hash FROM users WHERE id = ?').bind(auth.user.id).first()
+  const ok = await verifyPassword(current, row ? row.password_hash : null)
+  if (!ok) return json({ error: 'Current password is incorrect' }, 400)
+
+  await context.env.DB.prepare('UPDATE users SET password_hash = ?, updated_date = ? WHERE id = ?')
+    .bind(await hashPassword(next), nowIso(), auth.user.id).run()
   return json({ success: true })
 }
 
