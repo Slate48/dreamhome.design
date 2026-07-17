@@ -2,19 +2,25 @@
 // resolver(sql, binds) -> { first?, all?, run? }; unspecified reads default to null / empty.
 
 export function mockDb(resolver) {
-  return {
+  const db = {
+    batched: [], // records statements handed to batch(), each { sql, binds }
     prepare(sql) {
-      let binds = []
       const stmt = {
-        bind(...args) { binds = args; return stmt },
-        async first() { return resolver(sql, binds).first ?? null },
-        async all() { return resolver(sql, binds).all ?? { results: [] } },
-        async run() { return resolver(sql, binds).run ?? { meta: { changes: 1 } } },
+        sql,
+        binds: [],
+        bind(...args) { stmt.binds = args; return stmt },
+        async first() { return resolver(sql, stmt.binds).first ?? null },
+        async all() { return resolver(sql, stmt.binds).all ?? { results: [] } },
+        async run() { return resolver(sql, stmt.binds).run ?? { meta: { changes: 1 } } },
       }
       return stmt
     },
-    async batch(stmts) { return stmts.map(() => ({ meta: { changes: 1 } })) },
+    async batch(stmts) {
+      for (const s of stmts) db.batched.push({ sql: s.sql, binds: s.binds })
+      return stmts.map(() => ({ meta: { changes: 1 } }))
+    },
   }
+  return db
 }
 
 export function mockContext({ db, secret = 'test-secret', cookie = null, method = 'GET', path = '/api/x', body = null }) {

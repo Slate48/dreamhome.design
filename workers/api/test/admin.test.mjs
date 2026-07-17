@@ -76,3 +76,34 @@ test('DELETE /api/admin/tiers/:id: blocked while users are assigned (409)', asyn
   })
   assert.equal((await handleAdminRoutes(ctx)).status, 409)
 })
+
+test('POST /api/admin/tiers/reorder: super reorders via two-pass ranks, guarding system tiers', async () => {
+  const ids = ['tier_a', 'tier_b', 'tier_c']
+  const ctx = await ctxAs({ id: 'u_sa', role: 'staff', _row: superRow }, {
+    method: 'POST', path: '/api/admin/tiers/reorder', body: { orderedIds: ids },
+  })
+  const res = await handleAdminRoutes(ctx)
+  assert.equal(res.status, 200)
+  assert.equal((await res.json()).success, true)
+  const batched = ctx.env.DB.batched
+  assert.equal(batched.length, ids.length * 2)           // two passes
+  batched.slice(0, ids.length).forEach((s, i) => assert.equal(s.binds[0], -(i + 1))) // pass 1: negative temp ranks
+  batched.slice(ids.length).forEach((s, i) => assert.equal(s.binds[0], i + 1))       // pass 2: final 1..N
+  batched.forEach((s) => assert.match(s.sql, /is_system = 0/))                        // every UPDATE guards system tiers
+})
+
+test('POST /api/admin/tiers/reorder: non-super is forbidden', async () => {
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'POST', path: '/api/admin/tiers/reorder', body: { orderedIds: ['tier_a'] },
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 403)
+})
+
+test('DELETE /api/admin/tiers/:id: system tier cannot be deleted (403)', async () => {
+  const ctx = await ctxAs({ id: 'u_sa', role: 'staff', _row: superRow }, {
+    method: 'DELETE', path: '/api/admin/tiers/tier_superadmin',
+    reads: (sql) => sql.includes('FROM admin_tiers WHERE id')
+      ? { first: { id: 'tier_superadmin', is_system: 1, rank: 0 } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 403)
+})
