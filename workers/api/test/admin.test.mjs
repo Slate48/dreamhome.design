@@ -187,21 +187,22 @@ test('PATCH /api/admin/users/:id: cannot modify a peer/higher-ranked target', as
   assert.equal((await handleAdminRoutes(ctx)).status, 403)
 })
 
-test('GET /api/admin/users: returns only manageable rows, excluding self and non-subordinates', async () => {
+test('GET /api/admin/users: excludes the actor via the id clause even when rank would allow self', async () => {
   const rows = [
     { id: 'u_sa', tier_rank: 0, tier_name: 'Super Admin', tier_id: 'tier_superadmin', is_active: 1, has_password: 1, email: 'sa@x', full_name: 'SA', invited_by: null },
-    { id: 'u_ad', tier_rank: 1, tier_name: 'Admin', tier_id: 'tier_admin', is_active: 1, has_password: 1, email: 'ad@x', full_name: 'AD', invited_by: null },
+    { id: 'u_ad', tier_rank: 1, tier_name: 'Admin', tier_id: 'tier_admin', is_active: 1, has_password: 1, email: 'ad@x', full_name: 'AD', invited_by: 'u_sa' },
     { id: 'u_mg', tier_rank: 2, tier_name: 'Manager', tier_id: 'tier_manager', is_active: 1, has_password: 1, email: 'mg@x', full_name: 'MG', invited_by: 'u_ad' },
   ]
-  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+  const ctx = await ctxAs({ id: 'u_sa', role: 'staff', _row: superRow }, {
     method: 'GET', path: '/api/admin/users',
     reads: (sql) => sql.includes("WHERE u.role = 'staff'") ? { all: { results: rows } } : {},
   })
   const res = await handleAdminRoutes(ctx)
   assert.equal(res.status, 200)
   const list = await res.json()
-  assert.equal(list.length, 1)
-  assert.equal(list[0].id, 'u_mg')
+  const ids = list.map(r => r.id)
+  assert.ok(!ids.includes('u_sa'), 'actor own row must be excluded by the id clause')
+  assert.ok(ids.includes('u_ad') && ids.includes('u_mg'), 'lower-ranked rows must be kept')
 })
 
 test('POST /api/admin/users/:id/reinvite: rejects a user who already has a password (409)', async () => {
@@ -209,6 +210,15 @@ test('POST /api/admin/users/:id/reinvite: rejects a user who already has a passw
     method: 'POST', path: '/api/admin/users/u_active/reinvite',
     reads: (sql) => sql.includes("u.role = 'staff'")
       ? { first: { id: 'u_active', tier_rank: 2, tier_id: 'tier_manager', is_active: 1, has_password: 1 } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 409)
+})
+
+test('POST /api/admin/users/:id/reinvite: rejects a deactivated user who has a password (409, not resurrectable)', async () => {
+  const ctx = await ctxAs({ id: 'u_sa', role: 'staff', _row: superRow }, {
+    method: 'POST', path: '/api/admin/users/u_deactivated/reinvite',
+    reads: (sql) => sql.includes("u.role = 'staff'")
+      ? { first: { id: 'u_deactivated', tier_rank: 2, tier_id: 'tier_manager', is_active: 0, has_password: 1 } } : {},
   })
   assert.equal((await handleAdminRoutes(ctx)).status, 409)
 })
