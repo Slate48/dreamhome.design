@@ -54,10 +54,14 @@ Pages `wl-dreamhome-site`, Worker `wl-dreamhome-api`, D1 `wl-dreamhome-db`. Codi
 in `global_files/projects.json` → `categorySchema` (WHITE-LABEL NAMING STANDARD).
 
 ## Deploy flow (Phase 0, current)
-`npm run build` (with `VITE_BASE44_APP_ID`) → `dist/` → `cf-provision.js deploy
-dream-home-design --pages wl-dreamhome-site --dir dist` (direct wrangler upload via
-OAuth). base44 backend calls are dead at runtime post-deploy — expected until the
-migration wires the CF backend.
+**Frontend (Pages) is git-connected:** the `wl-dreamhome-site` Pages project builds
+and deploys automatically on merge to `main` (and builds a preview per branch/PR).
+A manual push also works and is faster than waiting on the git build:
+`npm run build` → `dist/` → `cf-provision.js deploy dream-home-design
+--pages wl-dreamhome-site --dir dist` (direct wrangler upload via OAuth) — but it is
+not required. **The Worker `wl-dreamhome-api` is NOT git-triggered** — deploy it
+manually via `workers/api/cf-wrangler.cjs deploy` (fleet OAuth). base44 backend calls
+are dead at runtime post-deploy — expected until the migration wires the CF backend.
 
 ## Migration
 Phased, in order — see docs/ROADMAP.md. Nothing moves on until the current phase is

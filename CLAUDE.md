@@ -57,7 +57,7 @@ also lives in the pre-existing `src/DATABASE.md` (base44-era reference — keep 
 D1 schema supersedes it).
 
 ## Git
-External remote: `Cinedex/dream-home-design` (Levi's Cinedex GitHub org — NOT an
+External remote: `Slate48/dreamhome.design` (Levi's Slate48 GitHub org — NOT an
 EchoHouse/client-owned remote; migration TBD, see PROJECT.md). Branch naming:
 `claude/<desc>` · `codex/<desc>`. Worktrees go under `.worktrees/` (gitignored),
 never sibling folders. Not in `~/Sites/pnpm-workspace.yaml` (client repos version
