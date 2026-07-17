@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { mockDb, mockContext } from './_mock.mjs'
 import {
   signJwt, getSession, requireStaff, requireCapability,
-  sha256Hex, generateInviteToken, INVITE_TTL_S, COOKIE,
+  sha256Hex, generateInviteToken, INVITE_TTL_S, COOKIE, publicUser,
 } from '../src/lib/auth.js'
 
 const SECRET = 'test-secret'
@@ -64,4 +64,29 @@ test('generateInviteToken is unique and url-safe', () => {
   assert.notEqual(a, b)
   assert.match(a, /^[A-Za-z0-9_-]+$/)
   assert.equal(INVITE_TTL_S, 604800)
+})
+
+test('publicUser exposes rank/capabilities/tier_name and preserves rank 0 (super admin)', () => {
+  const out = publicUser({
+    id: 'u1', email: 'a@b.com', role: 'staff', full_name: 'A',
+    tier_id: 't0', tier_name: 'Super Admin', rank: 0,
+    capabilities: ['users', 'portfolio'], is_active: 1, persistent: true,
+    password_hash: 'SHOULD_NOT_LEAK',
+  })
+  assert.equal(out.rank, 0)
+  assert.deepEqual(out.capabilities, ['users', 'portfolio'])
+  assert.equal(out.tier_name, 'Super Admin')
+  assert.equal(out.persistent, true)
+  assert.equal('password_hash' in out, false)
+})
+
+test('publicUser defaults capabilities to [] and null tier for a client session', () => {
+  const out = publicUser({
+    id: 'u2', email: 'c@b.com', role: 'client', full_name: 'C',
+    tier_id: null, tier_name: null, rank: null, capabilities: null, persistent: false,
+  })
+  assert.deepEqual(out.capabilities, [])
+  assert.equal(out.rank, null)
+  assert.equal(out.tier_name, null)
+  assert.equal(out.role, 'client')
 })

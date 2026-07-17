@@ -214,6 +214,24 @@ export async function getSession(context) {
   }
 }
 
+// The browser-facing projection of a session (from getSession). Carries the
+// authorization data the frontend needs to render capability-gated UI
+// (rank/capabilities/tier_name). rank 0 (super admin) is preserved as 0, never
+// coerced. Never includes password_hash or invite fields.
+export function publicUser(session) {
+  return {
+    id: session.id,
+    email: session.email,
+    role: session.role,
+    full_name: session.full_name,
+    tier_id: session.tier_id ?? null,
+    tier_name: session.tier_name ?? null,
+    rank: Number.isInteger(session.rank) ? session.rank : null,
+    capabilities: Array.isArray(session.capabilities) ? session.capabilities : [],
+    persistent: session.persistent === true,
+  }
+}
+
 export async function requireAuth(context) {
   const user = await getSession(context)
   if (!user) {

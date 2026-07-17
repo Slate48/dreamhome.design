@@ -14,7 +14,7 @@
  */
 
 import { json, parseJson, nowIso, newId, CORS } from './lib/http.js'
-import { verifyPassword, signJwt, buildSessionCookie, clearSessionCookie, requireCapability, requireAuth, getSession, REMEMBER_MAX_AGE_S } from './lib/auth.js'
+import { verifyPassword, signJwt, buildSessionCookie, clearSessionCookie, requireCapability, requireAuth, getSession, publicUser, REMEMBER_MAX_AGE_S } from './lib/auth.js'
 import { ENTITIES, CMS_ENTITIES, getEntity, hydrate, dehydrate } from './lib/entities.js'
 import { ENTITY_CAPABILITY } from './lib/rbac.js'
 import { handleAdminRoutes } from './lib/admin.js'
@@ -127,7 +127,7 @@ export default {
     if (pathname === '/api/auth/me' && method === 'GET') {
       const user = await getSession(context)
       if (!user) return json({ error: 'Not authenticated' }, 401)
-      return json({ id: user.id, email: user.email, role: user.role, full_name: user.full_name, persistent: user.persistent === true })
+      return json(publicUser(user))
     }
 
     if (pathname === '/api/auth/logout' && method === 'POST') {
