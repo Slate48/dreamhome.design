@@ -2,32 +2,28 @@ import React, { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
   LayoutGrid, Users, HelpCircle, GitBranch, DollarSign,
-  Settings, Image, Menu, X, LogOut, ChevronRight, Star, Inbox
+  Settings, Image, Menu, X, LogOut, ChevronRight, Star, Inbox, ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 
 const navItems = [
   { label: 'Dashboard', path: '/admin', icon: LayoutGrid },
-  { label: 'Portfolio', path: '/admin/portfolio', icon: Image },
-  { label: 'Team & Founders', path: '/admin/team', icon: Users },
-  { label: 'FAQs', path: '/admin/faqs', icon: HelpCircle },
-  { label: 'Process Steps', path: '/admin/process', icon: GitBranch },
-  { label: 'Investment', path: '/admin/investment', icon: DollarSign },
-  { label: 'Testimonials', path: '/admin/testimonials', icon: Star },
-  { label: 'Inquiries', path: '/admin/inquiries', icon: Inbox },
-  { label: 'Site Settings', path: '/admin/settings', icon: Settings },
+  { label: 'Portfolio', path: '/admin/portfolio', icon: Image, capability: 'portfolio' },
+  { label: 'Team & Founders', path: '/admin/team', icon: Users, capability: 'team' },
+  { label: 'FAQs', path: '/admin/faqs', icon: HelpCircle, capability: 'faqs' },
+  { label: 'Process Steps', path: '/admin/process', icon: GitBranch, capability: 'process' },
+  { label: 'Investment', path: '/admin/investment', icon: DollarSign, capability: 'investment' },
+  { label: 'Testimonials', path: '/admin/testimonials', icon: Star, capability: 'testimonials' },
+  { label: 'Inquiries', path: '/admin/inquiries', icon: Inbox, capability: 'inquiries' },
+  { label: 'Admins', path: '/admin/users', icon: ShieldCheck, capability: 'users' },
+  { label: 'Site Settings', path: '/admin/settings', icon: Settings, capability: 'settings' },
 ];
-
-const ROLE_LABELS = {
-  manager: 'Manager',
-  admin: 'Admin',
-  super_admin: 'Super Admin',
-};
 
 export default function AdminLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, can } = useAuth();
+  const visibleNav = navItems.filter((i) => !i.capability || can(i.capability));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -45,7 +41,7 @@ export default function AdminLayout() {
         </div>
 
         <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-          {navItems.map(item => {
+          {visibleNav.map(item => {
             const active = location.pathname === item.path;
             return (
               <Link
@@ -71,7 +67,7 @@ export default function AdminLayout() {
             <div className="px-4 py-2">
               <p className="text-white/70 font-body text-sm truncate">{user.full_name}</p>
               <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-gold/20 text-gold font-body text-xs">
-                {ROLE_LABELS[user.role] || user.role}
+                {user.tier_name || 'Staff'}
               </span>
             </div>
           )}
