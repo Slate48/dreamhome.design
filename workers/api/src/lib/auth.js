@@ -14,6 +14,8 @@ const KEY_LENGTH_BITS = 256 // 32 bytes
 export const REMEMBER_MAX_AGE_S = 30 * 24 * 60 * 60 // 30 days
 const SESSION_JWT_TTL_S = 86400 // 1 day (session-cookie / non-remembered)
 
+export const INVITE_TTL_S = 7 * 24 * 60 * 60 // 7 days
+
 // ---- base64url helpers ----
 
 function bytesToBase64Url(bytes) {
@@ -97,6 +99,18 @@ async function pbkdf2(password, salt) {
   return new Uint8Array(bits)
 }
 
+// SHA-256 hex — used to store invite tokens hashed (raw token only lives in the link).
+export async function sha256Hex(input) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input))
+  return bytesToHex(new Uint8Array(digest))
+}
+
+// Opaque, url-safe invite token (256 bits). The raw value is returned once (in the
+// copy-link); only its sha256Hex is persisted.
+export function generateInviteToken() {
+  return bytesToBase64Url(crypto.getRandomValues(new Uint8Array(32)))
+}
+
 // ---- JWT (HS256) ----
 
 async function hmacKey(secret) {
@@ -172,17 +186,32 @@ export async function getSession(context) {
   const payload = await verifyJwt(token, env.JWT_SECRET)
   if (!payload || !payload.sub) return null
 
-  // Re-fetch the live row every time — never trust the JWT's stale role claim,
-  // in case the user's role was changed (or the account removed) since login.
-  const user = await env.DB
-    .prepare('SELECT id, email, role, full_name FROM users WHERE id = ?')
+  // Re-fetch live every request — never trust the JWT's role/rank. A LEFT JOIN so
+  // clients (no tier) still resolve; rank/capabilities come from the tier.
+  const row = await env.DB
+    .prepare(
+      `SELECT u.id, u.email, u.role, u.full_name, u.tier_id, u.is_active,
+              t.name AS tier_name, t.rank AS tier_rank, t.capabilities AS tier_caps
+       FROM users u LEFT JOIN admin_tiers t ON t.id = u.tier_id
+       WHERE u.id = ?`
+    )
     .bind(payload.sub)
     .first()
-  if (!user) return null
-  // `persistent` reflects the "remember me" claim on the session token; it drives the
-  // frontend idle-logout (non-persistent sessions get signed out after inactivity).
-  // It is NOT trusted for authorization — role is always the live D1 value above.
-  return { ...user, persistent: payload.rmb === true }
+  if (!row) return null
+  if (row.is_active === 0) return null // deactivated account: session dies next request
+
+  let capabilities = []
+  if (row.tier_caps) {
+    try { capabilities = JSON.parse(row.tier_caps) } catch { capabilities = [] }
+  }
+  const rank = Number.isInteger(row.tier_rank) ? row.tier_rank : null
+
+  return {
+    id: row.id, email: row.email, role: row.role, full_name: row.full_name,
+    tier_id: row.tier_id, tier_name: row.tier_name || null, rank, capabilities,
+    is_active: row.is_active !== 0,
+    persistent: payload.rmb === true,
+  }
 }
 
 export async function requireAuth(context) {
@@ -191,6 +220,23 @@ export async function requireAuth(context) {
     return { response: json({ error: 'Authentication required' }, 401) }
   }
   return { user }
+}
+
+export async function requireStaff(context) {
+  const result = await requireAuth(context)
+  if (result.response) return result
+  if (result.user.role !== 'staff') {
+    return { response: json({ error: 'Staff access required' }, 403) }
+  }
+  return result
+}
+
+export async function requireCapability(context, capability) {
+  const result = await requireStaff(context)
+  if (result.response) return result
+  const { user } = result
+  if (user.rank === 0 || (user.capabilities || []).includes(capability)) return result
+  return { response: json({ error: 'Insufficient privileges' }, 403) }
 }
 
 export async function requireRole(context, allowedRoles) {
