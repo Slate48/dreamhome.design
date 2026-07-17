@@ -18,9 +18,16 @@ export const ENTITY_CAPABILITY = {
   SiteSettings: 'settings',
 }
 
-// rank 0 (super admin) manages everyone; otherwise only strictly-lower ranks
-// (higher rank number = lower privilege). Peers and superiors are off-limits.
+// rank 0 (super admin) manages everyone; otherwise you may act on your OWN level
+// or below (higher rank number = lower privilege). Governs create / edit / reinvite.
 export function canManage(actorRank, targetRank) {
+  if (actorRank === 0) return true
+  return Number.isInteger(targetRank) && targetRank >= actorRank
+}
+
+// Delete / deactivate is stricter than manage: only STRICTLY-lower ranks — never a
+// peer, never a superior. Super (rank 0) bypasses.
+export function canDelete(actorRank, targetRank) {
   if (actorRank === 0) return true
   return Number.isInteger(targetRank) && targetRank > actorRank
 }

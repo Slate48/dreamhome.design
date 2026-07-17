@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  CAPABILITIES, ENTITY_CAPABILITY, canManage, capsSubsetOf, isValidCapabilitySet,
+  CAPABILITIES, ENTITY_CAPABILITY, canManage, canDelete, capsSubsetOf, isValidCapabilitySet,
 } from '../src/lib/rbac.js'
 
 test('CAPABILITIES has the 9 canonical keys', () => {
@@ -21,11 +21,25 @@ test('canManage: super (rank 0) manages anyone', () => {
   assert.equal(canManage(0, 0), true)
 })
 
-test('canManage: only strictly-lower ranks', () => {
-  assert.equal(canManage(2, 3), true)
-  assert.equal(canManage(2, 2), false) // peer
-  assert.equal(canManage(2, 1), false) // superior
+test('canManage: own level or below (create/edit/reinvite)', () => {
+  assert.equal(canManage(2, 3), true)  // below
+  assert.equal(canManage(2, 2), true)  // peer — now allowed
+  assert.equal(canManage(1, 1), true)  // peer at Level 1
+  assert.equal(canManage(2, 1), false) // superior — never
   assert.equal(canManage(2, null), false)
+  assert.equal(canManage(2, undefined), false)
+  assert.equal(canManage(2, 1.5), false) // non-integer guard
+})
+
+test('canDelete: strictly below only (delete/deactivate)', () => {
+  assert.equal(canDelete(0, 0), true)  // super bypasses everything
+  assert.equal(canDelete(0, 2), true)
+  assert.equal(canDelete(2, 3), true)  // below
+  assert.equal(canDelete(2, 2), false) // peer — never delete a peer
+  assert.equal(canDelete(1, 1), false) // peer at Level 1
+  assert.equal(canDelete(2, 1), false) // superior
+  assert.equal(canDelete(2, null), false)
+  assert.equal(canDelete(2, 1.5), false) // non-integer guard
 })
 
 test('capsSubsetOf: super bypasses', () => {
