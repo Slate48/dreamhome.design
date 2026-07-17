@@ -21,7 +21,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { Copy, UserPlus, Trash2 } from 'lucide-react';
+import { Copy, UserPlus, Trash2, Pencil } from 'lucide-react';
 
 const STATUS_STYLES = {
   active: 'bg-green-100 text-green-700',
@@ -37,10 +37,11 @@ export default function UsersPanel() {
   const [loading, setLoading] = useState(true);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [editTarget, setEditTarget] = useState(null);
 
-  // Tiers this user may assign: below their rank (super sees all non-super tiers).
+  // Tiers this user may assign: their own level or below (super sees all non-super tiers).
   const assignableTiers = tiers.filter(
-    (t) => !t.is_system && (user?.rank === 0 || t.rank > user?.rank),
+    (t) => !t.is_system && (user?.rank === 0 || t.rank >= user?.rank),
   );
 
   const load = useCallback(async () => {
@@ -85,9 +86,10 @@ export default function UsersPanel() {
     }
   };
 
-  const onChangeTier = async (u, tier_id) => {
+  const onSaveEdit = async (id, body) => {
     try {
-      await updateUser(u.id, { tier_id });
+      await updateUser(id, body);
+      setEditTarget(null);
       load();
     } catch (e) {
       toast({ title: 'Update failed', description: e.message, variant: 'destructive' });
@@ -108,7 +110,8 @@ export default function UsersPanel() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <p className="font-body text-sm text-muted-foreground">
-          Admins you can manage. You can only assign tiers below your own.
+          Your team. You can invite and edit people at or below your own level; only
+          people below your level can be deactivated or removed.
         </p>
         <Button onClick={() => setInviteOpen(true)} className="bg-gold hover:bg-gold/90 text-white" disabled={!assignableTiers.length}>
           <UserPlus size={16} className="mr-2" /> Invite admin
@@ -130,39 +133,44 @@ export default function UsersPanel() {
           </TableHeader>
           <TableBody>
             {users.length === 0 && (
-              <TableRow><TableCell colSpan={5} className="text-muted-foreground">No admins yet.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-muted-foreground">No team members yet.</TableCell></TableRow>
             )}
             {users.map((u) => (
               <TableRow key={u.id}>
                 <TableCell className="font-medium">{u.full_name}</TableCell>
                 <TableCell className="text-muted-foreground">{u.email}</TableCell>
                 <TableCell>
-                  <Select value={u.tier_id} onValueChange={(v) => onChangeTier(u, v)}>
-                    <SelectTrigger className="w-40 h-8"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {assignableTiers.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Badge variant="outline">{u.tier_name}</Badge>
                 </TableCell>
                 <TableCell>
                   <Badge className={STATUS_STYLES[u.status]}>{u.status}</Badge>
                 </TableCell>
                 <TableCell className="text-right space-x-2 whitespace-nowrap">
-                  {u.status === 'pending' && (
+                  {u.status === 'pending' && u.can_edit && (
                     <Button variant="outline" size="sm" onClick={() => onReinvite(u.id)}>
                       <Copy size={14} className="mr-1" /> Invite link
                     </Button>
                   )}
-                  {u.status !== 'pending' && (
+                  {u.status !== 'pending' && u.is_active && u.can_delete && (
                     <Button variant="outline" size="sm" onClick={() => onToggleActive(u)}>
-                      {u.is_active ? 'Deactivate' : 'Activate'}
+                      Deactivate
                     </Button>
                   )}
-                  <Button variant="ghost" size="sm" className="text-red-500" onClick={() => setDeleteTarget(u)}>
-                    <Trash2 size={14} />
-                  </Button>
+                  {u.status !== 'pending' && !u.is_active && u.can_edit && (
+                    <Button variant="outline" size="sm" onClick={() => onToggleActive(u)}>
+                      Activate
+                    </Button>
+                  )}
+                  {u.can_edit && (
+                    <Button variant="outline" size="sm" onClick={() => setEditTarget(u)}>
+                      <Pencil size={14} className="mr-1" /> Edit
+                    </Button>
+                  )}
+                  {u.can_delete && (
+                    <Button variant="ghost" size="sm" className="text-red-500" aria-label="Delete admin" onClick={() => setDeleteTarget(u)}>
+                      <Trash2 size={14} />
+                    </Button>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -176,6 +184,13 @@ export default function UsersPanel() {
         tiers={assignableTiers}
         onInvited={load}
         copyLink={copyLink}
+      />
+
+      <EditDialog
+        target={editTarget}
+        onClose={() => setEditTarget(null)}
+        tiers={assignableTiers}
+        onSave={onSaveEdit}
       />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
@@ -266,6 +281,57 @@ function InviteDialog({ open, onClose, tiers, onInvited, copyLink }) {
               {submitting ? 'Creating…' : 'Create invite'}
             </Button>
           )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditDialog({ target, onClose, tiers, onSave }) {
+  const [fullName, setFullName] = useState('');
+  const [tierId, setTierId] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (target) { setFullName(target.full_name || ''); setTierId(target.tier_id || ''); }
+  }, [target]);
+
+  const submit = async () => {
+    setSaving(true);
+    try {
+      await onSave(target.id, { full_name: fullName, tier_id: tierId });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={!!target} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Edit {target?.full_name}</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="edit-name" className="text-xs">Full name</Label>
+            <Input id="edit-name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1" />
+          </div>
+          <div>
+            <Label className="text-xs">Tier</Label>
+            <Select value={tierId} onValueChange={setTierId}>
+              <SelectTrigger className="mt-1"><SelectValue placeholder="Choose a tier" /></SelectTrigger>
+              <SelectContent>
+                {tiers.map((t) => (<SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            className="bg-gold hover:bg-gold/90 text-white"
+            disabled={saving || !fullName || !tierId}
+            onClick={submit}
+          >
+            {saving ? 'Saving…' : 'Save changes'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

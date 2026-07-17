@@ -26,6 +26,11 @@ const adminRow = {
   is_active: 1, tier_name: 'Admin', tier_rank: 1,
   tier_caps: '["portfolio","team","faqs","process","investment","testimonials","inquiries","settings","users"]',
 }
+const managerRow = {
+  id: 'u_mg', email: 'mg@x.com', role: 'staff', full_name: 'MG', tier_id: 'tier_manager',
+  is_active: 1, tier_name: 'Level 2', tier_rank: 2,
+  tier_caps: '["portfolio","team","faqs","process","investment","testimonials","inquiries","settings","users"]',
+}
 
 test('non-admin path returns null (falls through to index.js)', async () => {
   const ctx = await ctxAs({ id: 'u_sa', role: 'staff', _row: superRow }, { path: '/api/PortfolioItem' })
@@ -117,9 +122,21 @@ test('POST /api/admin/users: rejects assigning the super tier', async () => {
   assert.equal((await handleAdminRoutes(ctx)).status, 403)
 })
 
-test('POST /api/admin/users: admin cannot invite into a tier at/above its own rank', async () => {
+test('POST /api/admin/users: admin can invite at their own level (peer tier)', async () => {
   const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
-    method: 'POST', path: '/api/admin/users', body: { email: 'x@y.com', full_name: 'X', tier_id: 'tier_admin' },
+    method: 'POST', path: '/api/admin/users', body: { email: 'peer@y.com', full_name: 'Peer', tier_id: 'tier_admin' },
+    reads: (sql) => {
+      if (sql.includes('FROM admin_tiers WHERE id')) return { first: { id: 'tier_admin', rank: 1, capabilities: '["portfolio"]', is_system: 0 } }
+      if (sql.includes('FROM users WHERE email')) return { first: null }
+      return {}
+    },
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 201)
+})
+
+test('POST /api/admin/users: cannot invite into a tier above your own rank', async () => {
+  const ctx = await ctxAs({ id: 'u_mg', role: 'staff', _row: managerRow }, {
+    method: 'POST', path: '/api/admin/users', body: { email: 'up@y.com', full_name: 'Up', tier_id: 'tier_admin' },
     reads: (sql) => sql.includes('FROM admin_tiers WHERE id')
       ? { first: { id: 'tier_admin', rank: 1, capabilities: '["portfolio"]', is_system: 0 } } : {},
   })
@@ -152,6 +169,24 @@ test('DELETE /api/admin/users/:id: cannot delete a super-admin target', async ()
   assert.equal((await handleAdminRoutes(ctx)).status, 403)
 })
 
+test('DELETE /api/admin/users/:id: cannot delete a peer (delete is strictly-below)', async () => {
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'DELETE', path: '/api/admin/users/u_peer',
+    reads: (sql) => sql.includes("u.role = 'staff'")
+      ? { first: { id: 'u_peer', tier_rank: 1, tier_id: 'tier_admin', is_active: 1, has_password: 1 } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 403)
+})
+
+test('DELETE /api/admin/users/:id: deletes a lower-ranked target', async () => {
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'DELETE', path: '/api/admin/users/u_mem',
+    reads: (sql) => sql.includes("u.role = 'staff'")
+      ? { first: { id: 'u_mem', tier_rank: 3, tier_id: 'tier_member', is_active: 1, has_password: 1 } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 200)
+})
+
 test('PATCH /api/admin/users/:id self-branch updates only full_name, ignoring extra fields', async () => {
   let updateSql = null
   const jwt = await signJwt({ sub: 'u_ad', role: 'staff', rmb: false }, SECRET)
@@ -178,11 +213,35 @@ test('PATCH /api/admin/users/:id: cannot modify a super-admin target', async () 
   assert.equal((await handleAdminRoutes(ctx)).status, 403)
 })
 
-test('PATCH /api/admin/users/:id: cannot modify a peer/higher-ranked target', async () => {
+test("PATCH /api/admin/users/:id: can edit a peer's name (manage allows own level)", async () => {
+  let updateSql = null
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'PATCH', path: '/api/admin/users/u_peer', body: { full_name: 'Renamed' },
+    reads: (sql) => {
+      if (sql.includes("u.role = 'staff'")) return { first: { id: 'u_peer', tier_rank: 1, tier_id: 'tier_admin', is_active: 1, has_password: 1 } }
+      if (sql.startsWith('UPDATE users SET')) { updateSql = sql; return { run: { meta: { changes: 1 } } } }
+      return {}
+    },
+  })
+  const res = await handleAdminRoutes(ctx)
+  assert.equal(res.status, 200)
+  assert.match(updateSql, /full_name/)
+})
+
+test('PATCH /api/admin/users/:id: cannot DEACTIVATE a peer (deactivate is delete-like)', async () => {
   const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
     method: 'PATCH', path: '/api/admin/users/u_peer', body: { is_active: 0 },
     reads: (sql) => sql.includes("u.role = 'staff'")
       ? { first: { id: 'u_peer', tier_rank: 1, tier_id: 'tier_admin', is_active: 1, has_password: 1 } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 403)
+})
+
+test('PATCH /api/admin/users/:id: cannot modify a higher-ranked target', async () => {
+  const ctx = await ctxAs({ id: 'u_mg', role: 'staff', _row: managerRow }, {
+    method: 'PATCH', path: '/api/admin/users/u_ad', body: { full_name: 'x' },
+    reads: (sql) => sql.includes("u.role = 'staff'")
+      ? { first: { id: 'u_ad', tier_rank: 1, tier_id: 'tier_admin', is_active: 1, has_password: 1 } } : {},
   })
   assert.equal((await handleAdminRoutes(ctx)).status, 403)
 })
@@ -203,6 +262,34 @@ test('GET /api/admin/users: excludes the actor via the id clause even when rank 
   const ids = list.map(r => r.id)
   assert.ok(!ids.includes('u_sa'), 'actor own row must be excluded by the id clause')
   assert.ok(ids.includes('u_ad') && ids.includes('u_mg'), 'lower-ranked rows must be kept')
+  const byId = Object.fromEntries(list.map(r => [r.id, r]))
+  assert.equal(byId.u_ad.can_edit, true)   // super manages anyone
+  assert.equal(byId.u_ad.can_delete, true) // super deletes anyone
+  assert.equal(byId.u_mg.can_edit, true)
+  assert.equal(byId.u_mg.can_delete, true)
+})
+
+test('GET /api/admin/users: non-super viewer hides the super row and annotates edit/delete', async () => {
+  const rows = [
+    { id: 'u_sa', tier_rank: 0, tier_name: 'Super Admin', tier_id: 'tier_superadmin', is_active: 1, has_password: 1, email: 'sa@x', full_name: 'SA', invited_by: null },
+    { id: 'u_ad', tier_rank: 1, tier_name: 'Level 1', tier_id: 'tier_admin', is_active: 1, has_password: 1, email: 'ad@x', full_name: 'AD', invited_by: 'u_sa' },
+    { id: 'u_peer', tier_rank: 1, tier_name: 'Level 1', tier_id: 'tier_admin', is_active: 1, has_password: 1, email: 'peer@x', full_name: 'Peer', invited_by: 'u_sa' },
+    { id: 'u_mem', tier_rank: 3, tier_name: 'Member', tier_id: 'tier_member', is_active: 1, has_password: 1, email: 'mem@x', full_name: 'Mem', invited_by: 'u_ad' },
+  ]
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'GET', path: '/api/admin/users',
+    reads: (sql) => sql.includes("WHERE u.role = 'staff'") ? { all: { results: rows } } : {},
+  })
+  const res = await handleAdminRoutes(ctx)
+  assert.equal(res.status, 200)
+  const list = await res.json()
+  const byId = Object.fromEntries(list.map(r => [r.id, r]))
+  assert.ok(!byId.u_sa, 'super row hidden from a non-super viewer')
+  assert.ok(!byId.u_ad, 'own row excluded')
+  assert.equal(byId.u_peer.can_edit, true)    // canManage(1,1) — peer editable
+  assert.equal(byId.u_peer.can_delete, false) // canDelete(1,1) — peer not deletable
+  assert.equal(byId.u_mem.can_edit, true)
+  assert.equal(byId.u_mem.can_delete, true)   // rank 3 is strictly below rank 1
 })
 
 test('POST /api/admin/users/:id/reinvite: rejects a user who already has a password (409)', async () => {
@@ -223,13 +310,28 @@ test('POST /api/admin/users/:id/reinvite: rejects a deactivated user who has a p
   assert.equal((await handleAdminRoutes(ctx)).status, 409)
 })
 
-test('POST /api/admin/users/:id/reinvite: forbidden for a target the actor cannot manage', async () => {
-  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
-    method: 'POST', path: '/api/admin/users/u_peer/reinvite',
+test('POST /api/admin/users/:id/reinvite: forbidden for a higher-ranked target', async () => {
+  const ctx = await ctxAs({ id: 'u_mg', role: 'staff', _row: managerRow }, {
+    method: 'POST', path: '/api/admin/users/u_ad/reinvite',
     reads: (sql) => sql.includes("u.role = 'staff'")
-      ? { first: { id: 'u_peer', tier_rank: 1, tier_id: 'tier_admin', is_active: 0, has_password: 0 } } : {},
+      ? { first: { id: 'u_ad', tier_rank: 1, tier_id: 'tier_admin', is_active: 0, has_password: 0 } } : {},
   })
   assert.equal((await handleAdminRoutes(ctx)).status, 403)
+})
+
+test('POST /api/admin/users/:id/reinvite: cannot reinvite a super-admin target', async () => {
+  let updateRan = false
+  const ctx = await ctxAs({ id: 'u_sa', role: 'staff', _row: superRow }, {
+    method: 'POST', path: '/api/admin/users/u_other/reinvite',
+    reads: (sql) => {
+      if (sql.includes("u.role = 'staff'")) return { first: { id: 'u_other', tier_rank: 0, tier_id: 'tier_superadmin', is_active: 1, has_password: 0 } }
+      if (sql.startsWith('UPDATE users SET')) { updateRan = true; return {} }
+      return {}
+    },
+  })
+  const res = await handleAdminRoutes(ctx)
+  assert.equal(res.status, 403)
+  assert.equal(updateRan, false, 'the reinvite UPDATE must not run for a super-admin target')
 })
 
 test('POST /api/admin/users: stores only the SHA-256 hash of the invite token, never the raw token', async () => {

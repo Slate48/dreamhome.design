@@ -9,7 +9,7 @@
 
 import { json, parseJson, nowIso, newId } from './http.js'
 import { requireStaff, requireCapability, requireAuth, getSession, sha256Hex, generateInviteToken, INVITE_TTL_S, hashPassword, verifyPassword, signJwt, buildSessionCookie } from './auth.js'
-import { isValidCapabilitySet, canManage, capsSubsetOf } from './rbac.js'
+import { isValidCapabilitySet, canManage, canDelete, capsSubsetOf } from './rbac.js'
 
 const SUPER_TIER_RANK = 0
 
@@ -174,7 +174,10 @@ function userStatus(row) {
   return row.has_password ? 'disabled' : 'pending'
 }
 
-// GET /api/admin/users — staff you may manage (rank strictly below yours; super sees all).
+// GET /api/admin/users — the roster the viewer may see. A non-super viewer sees
+// every staff row except the super account (rank 0) and their own; super sees all
+// but self. Each row is annotated can_edit/can_delete; every mutation re-checks
+// server-side, so these flags are for UI affordance only (defense in depth).
 async function listUsers(context) {
   const auth = await requireCapability(context, 'users')
   if (auth.response) return auth.response
@@ -189,11 +192,13 @@ async function listUsers(context) {
        ORDER BY t.rank ASC, u.full_name ASC`
     ).all()
   const rows = (rs.results || [])
-    .filter((r) => r.id !== me.id && canManage(me.rank, r.tier_rank))
+    .filter((r) => r.id !== me.id && (me.rank === SUPER_TIER_RANK || r.tier_rank !== SUPER_TIER_RANK))
     .map((r) => ({
       id: r.id, email: r.email, full_name: r.full_name, tier_id: r.tier_id,
       tier_name: r.tier_name, rank: r.tier_rank, is_active: !!r.is_active,
       status: userStatus(r), invited_by: r.invited_by || null,
+      can_edit: canManage(me.rank, r.tier_rank),
+      can_delete: canDelete(me.rank, r.tier_rank),
     }))
   return json(rows)
 }
@@ -212,7 +217,7 @@ async function inviteUser(context) {
   const tier = await context.env.DB.prepare('SELECT id, rank, capabilities, is_system FROM admin_tiers WHERE id = ?').bind(tierId).first()
   if (!tier) return json({ error: 'unknown tier' }, 400)
   if (tier.is_system || tier.rank === SUPER_TIER_RANK) return json({ error: 'Cannot assign the super admin tier' }, 403)
-  if (!canManage(me.rank, tier.rank)) return json({ error: 'You can only assign tiers below your own' }, 403)
+  if (!canManage(me.rank, tier.rank)) return json({ error: 'You can only assign tiers at or below your own' }, 403)
   if (!capsSubsetOf(safeParseArray(tier.capabilities), me.capabilities, me.rank)) {
     return json({ error: 'That tier grants capabilities you do not have' }, 403)
   }
@@ -248,6 +253,7 @@ async function reinviteUser(context, id) {
   const me = auth.user
   const target = await loadStaffTarget(context.env, id)
   if (!target) return json({ error: 'not found' }, 404)
+  if (target.tier_rank === SUPER_TIER_RANK) return json({ error: 'The super admin cannot be modified' }, 403)
   if (!canManage(me.rank, target.tier_rank)) return json({ error: 'Insufficient privileges' }, 403)
   if (target.has_password) return json({ error: 'That user has already set up their account' }, 409)
 
@@ -288,12 +294,18 @@ async function patchUser(context, id) {
   const sets = []
   const binds = []
   if (typeof body.full_name === 'string' && body.full_name.trim()) { sets.push('full_name = ?'); binds.push(body.full_name.trim()) }
-  if ('is_active' in body) { sets.push('is_active = ?'); binds.push(body.is_active ? 1 : 0) }
+  if ('is_active' in body) {
+    const active = body.is_active ? 1 : 0
+    if (active === 0 && !canDelete(me.rank, target.tier_rank)) {
+      return json({ error: 'You cannot deactivate someone at your own level' }, 403)
+    }
+    sets.push('is_active = ?'); binds.push(active)
+  }
   if ('tier_id' in body) {
     const tier = await context.env.DB.prepare('SELECT id, rank, capabilities, is_system FROM admin_tiers WHERE id = ?').bind(body.tier_id).first()
     if (!tier) return json({ error: 'unknown tier' }, 400)
     if (tier.is_system || tier.rank === SUPER_TIER_RANK) return json({ error: 'Cannot assign the super admin tier' }, 403)
-    if (!canManage(me.rank, tier.rank)) return json({ error: 'You can only assign tiers below your own' }, 403)
+    if (!canManage(me.rank, tier.rank)) return json({ error: 'You can only assign tiers at or below your own' }, 403)
     if (!capsSubsetOf(safeParseArray(tier.capabilities), me.capabilities, me.rank)) {
       return json({ error: 'That tier grants capabilities you do not have' }, 403)
     }
@@ -315,7 +327,7 @@ async function deleteUser(context, id) {
   const target = await loadStaffTarget(context.env, id)
   if (!target) return json({ error: 'not found' }, 404)
   if (target.tier_rank === SUPER_TIER_RANK) return json({ error: 'The super admin cannot be deleted' }, 403)
-  if (!canManage(me.rank, target.tier_rank)) return json({ error: 'Insufficient privileges' }, 403)
+  if (!canDelete(me.rank, target.tier_rank)) return json({ error: 'Insufficient privileges' }, 403)
   await context.env.DB.prepare('DELETE FROM users WHERE id = ?').bind(id).run()
   return json({ success: true })
 }
