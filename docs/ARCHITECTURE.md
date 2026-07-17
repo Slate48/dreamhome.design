@@ -29,7 +29,7 @@ account**.
 - **Config/build:** `@base44/vite-plugin`, `src/api/base44Client.js`,
   `src/lib/app-params.js`; app id `6a0c98b9972c40dc9ebe5d05`.
 - **Records:** base44 now writes DB records directly into the repo
-  (`Cinedex/dream-home-design`); a full export is also being provided by Levi. These
+  (`Slate48/dreamhome.design`); a full export is also being provided by Levi. These
   are the D1 seed source (NOT an API scrape).
 
 ## Target backend — Cloudflare (fleet account)

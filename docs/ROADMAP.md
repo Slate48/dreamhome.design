@@ -27,7 +27,7 @@
 - **Files:** `Core.UploadFile` (client document uploads) — → R2.
 - **Payments:** `@stripe/*` present, unused.
 - **Data source for seed:** in-repo record files (base44 pushes records into
-  `Cinedex/dream-home-design`) + Levi's full DB export. NO base44 API scrape. As of
+  `Slate48/dreamhome.design`) + Levi's full DB export. NO base44 API scrape. As of
   onboarding the record files have not landed yet — expected under `base44/` or a
   new `data/`/`records/` dir (docs/FEATURES.md "Data source for the D1 seed").
 
