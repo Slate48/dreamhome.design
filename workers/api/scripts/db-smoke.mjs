@@ -51,9 +51,9 @@ try {
   const tiers = query('SELECT id, name, rank FROM admin_tiers ORDER BY rank;')
   assert(tiers.length === 4, `expected 4 tiers, got ${tiers.length}`)
   assert(tiers[0].id === 'tier_superadmin' && tiers[0].rank === 0, 'rank 0 super')
-  assert(tiers[1].id === 'tier_admin' && tiers[1].name === 'Level 1', 'rank 1 Level 1')
-  assert(tiers[2].id === 'tier_manager' && tiers[2].name === 'Level 2', 'rank 2 Level 2')
-  assert(tiers[3].id === 'tier_member' && tiers[3].name === 'Member', 'rank 3 Member')
+  assert(tiers[1].id === 'tier_admin' && tiers[1].name === 'Level 1' && tiers[1].rank === 1, 'rank 1 Level 1')
+  assert(tiers[2].id === 'tier_manager' && tiers[2].name === 'Level 2' && tiers[2].rank === 2, 'rank 2 Level 2')
+  assert(tiers[3].id === 'tier_member' && tiers[3].name === 'Member' && tiers[3].rank === 3, 'rank 3 Member')
 
   // 3. THE REGRESSION GUARD: a pending invite inserts with password_hash = NULL.
   //    Pre-0004 this threw "NOT NULL constraint failed: users.password_hash".
@@ -70,10 +70,10 @@ try {
   assert(gone[0].n === 0, 'row deleted')
 
   console.log('SMOKE PASS — migrations 0001..0005 apply; NULL-password invite + deactivate + delete all succeed')
-  process.exit(0)
+  process.exitCode = 0
 } catch (e) {
   console.error('SMOKE FAIL —', e.message)
-  process.exit(1)
+  process.exitCode = 1
 } finally {
   rmSync(STATE, { recursive: true, force: true })
 }
