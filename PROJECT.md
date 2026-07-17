@@ -67,22 +67,18 @@ package.json but UNUSED in source** — dead scaffolding, decision deferred to P
   The old `production` branch + `protect-production` ruleset were retired in the flip.
 
 ## Levi blockers (Phase 0 output — action needed)
-1. **Custom domain `dreamhome.design` is NOT in the fleet CF account.** The zone is
-   registered/hosted at **GoDaddy** (nameservers `ns59/ns60.domaincontrol.com`,
-   currently pointing at GoDaddy IP `160.153.0.194`). To attach it to the Pages
-   project, the zone must first be added to the fleet CF account:
-   - CF dashboard (fleet account) → **Add a site** → `dreamhome.design` → pick a plan
-     (Free) → CF issues two nameservers (e.g. `x.ns.cloudflare.com`).
-   - At **GoDaddy** → domain DNS → change nameservers from `domaincontrol.com` to the
-     two Cloudflare nameservers. Wait for propagation + CF "Active".
-   - Then: Pages project `wl-dreamhome-site` → Custom domains → add `dreamhome.design`
-     (+ `www`). **Do not change DNS blindly — coordinate the NS cutover with the
-     client, it moves the whole domain's DNS to Cloudflare.**
+1. ✅ **RESOLVED (2026-07-16): Custom domain `dreamhome.design` is attached to the
+   fleet CF account and serving.** The zone was added to the fleet account and the
+   Pages project `wl-dreamhome-site` now serves `dreamhome.design` (+ `www` and
+   `portal.*`); the Worker API routes resolve on the custom-domain zone. (Historical:
+   the zone was previously registered at GoDaddy with `ns59/ns60.domaincontrol.com`
+   and had to be moved onto Cloudflare nameservers before the Pages custom domain
+   could be added.)
 2. **Git-remote migration is DEFERRED (not now).** Repo sits at
-   `Cinedex/dream-home-design` (Levi's Cinedex GitHub org). base44 is currently
+   `Slate48/dreamhome.design` (Levi's Slate48 GitHub org). base44 is currently
    pushing DATABASE RECORDS directly into this repo, so the remote must STAY as-is
    until the export/record-sync is complete — moving it now would break base44's push
-   target. Revisit the remote (keep on Cinedex vs move to a Slate48/EchoHouse-owned
+   target. Revisit the remote (keep on Slate48 vs move to an EchoHouse/client-owned
    repo vs client handoff) only after base44 finishes exporting records.
 3. **base44 backend teardown timing.** Decide when to pause/delete base44 app
    `6a0c98b9972c40dc9ebe5d05` — must be AFTER the CF cutover verifies (P7) AND after
@@ -96,7 +92,7 @@ will provide a full DB export; the P2/P3 D1 seed sources from those (see docs/FE
 "Data source for the D1 seed") — no base44 API scrape planned._
 
 ## Key paths & links
-- Repo: `Cinedex/dream-home-design` · on-disk `~/Sites/clients/whitelabel/echohouse/dreamhome/site`
+- Repo: `Slate48/dreamhome.design` · on-disk `~/Sites/clients/whitelabel/echohouse/dreamhome/site`
 - Live (Phase 0): https://wl-dreamhome-site.pages.dev · Target domain: https://dreamhome.design
 - Data model: `docs/FEATURES.md` (inventory) + `src/DATABASE.md` (base44-era detail)
 - Migration plan: `docs/ROADMAP.md` · Architecture: `docs/ARCHITECTURE.md`
