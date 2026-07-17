@@ -47,7 +47,7 @@ export default function PortalLayout() {
             Client Portal
           </div>
 
-          <nav className="flex-1 px-3 space-y-1">
+          <nav className="flex-1 overflow-y-auto px-3 space-y-1">
             {portalLinks.map(link => (
               <Link
                 key={link.path}

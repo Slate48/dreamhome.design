@@ -30,9 +30,10 @@ export default function AdminLayout() {
   const { user, logout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-charcoal transform transition-transform duration-300 lg:translate-x-0 lg:static lg:flex lg:flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+    <div className="min-h-screen bg-gray-50">
+      {/* Sidebar — fixed to the viewport on every breakpoint so it never scrolls with
+          the page body; its own nav scrolls if the item list outgrows the viewport. */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-charcoal flex flex-col transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <div>
             <p className="text-white font-heading text-lg">Admin Portal</p>
@@ -43,7 +44,7 @@ export default function AdminLayout() {
           </button>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 overflow-y-auto p-4 space-y-1">
           {navItems.map(item => {
             const active = location.pathname === item.path;
             return (
@@ -88,8 +89,9 @@ export default function AdminLayout() {
         <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main — offset past the fixed sidebar on desktop; the page body scrolls,
+          the sidebar stays put. */}
+      <div className="lg:ml-64 min-h-screen flex flex-col min-w-0">
         {/* Top bar */}
         <header className="bg-white border-b border-border px-6 py-4 flex items-center gap-4 lg:hidden">
           <button onClick={() => setSidebarOpen(true)} className="text-foreground">
@@ -98,7 +100,7 @@ export default function AdminLayout() {
           <p className="font-heading text-lg text-foreground">Admin Portal</p>
         </header>
 
-        <main className="flex-1 p-6 lg:p-8 overflow-auto">
+        <main className="flex-1 p-6 lg:p-8">
           <Outlet />
         </main>
       </div>
