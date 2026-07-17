@@ -31,7 +31,7 @@ The map is keyed by tier id with a graceful fallback (a tier with no entry rende
 Extend the existing `patchUser` handler (`workers/api/src/lib/admin.js`) — the non-self, `canManage`-gated, super-blocked branch. All existing guards are unchanged (self-branch still edits only own `full_name`; `id === me.id` never reaches this code; `target.tier_rank === SUPER_TIER_RANK` still 403s; `canManage(me.rank, target.tier_rank)` still gates). Two new optional body fields are handled after the existing `tier_id` block:
 
 - **`email`** (optional): if `typeof body.email === 'string' && body.email.trim()`:
-  - Trim (do not lowercase — matches existing invite/login behavior).
+  - Trim **and lowercase** — matches the *actual* existing invite/login behavior. Both `inviteUser` (`admin.js:212`) and login (`index.js:90`) do `.trim().toLowerCase()`, and login looks the account up by the lowercased email. Storing a mixed-case address here would lock the user out (their lowercased login lookup would never match). *(Corrected 2026-07-17: an earlier draft of this spec said "do not lowercase"; that was factually wrong about the existing behavior and would have shipped a login-lockout bug.)*
   - Reject invalid format with `400 { error: 'Enter a valid email address' }` via a shared `isValidEmail` helper.
   - **Uniqueness pre-check:** `SELECT id FROM users WHERE email = ? AND id != ?` (target id). If a row exists → `409 { error: 'That email is already in use' }`. (The column is `NOT NULL UNIQUE`; the pre-check turns a raw constraint 500 into a clean 409.)
   - Add `email = ?` to the update.
@@ -59,7 +59,7 @@ Both require current-password confirmation (matches the existing change-password
 ```
 requireAuth (401 if not signed in)
 body = { current_password, new_email }
-new_email = trim; if !isValidEmail(new_email) -> 400 { error: 'Enter a valid email address' }
+new_email = trim + lowercase (same as invite/login); if !isValidEmail(new_email) -> 400 { error: 'Enter a valid email address' }
 row = SELECT password_hash FROM users WHERE id = me.id
 if !verifyPassword(current_password, row?.password_hash) -> 403 { error: 'Current password is incorrect' }
 dupe = SELECT id FROM users WHERE email = ? AND id != me.id ; if dupe -> 409 { error: 'That email is already in use' }
