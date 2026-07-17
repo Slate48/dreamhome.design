@@ -19,7 +19,7 @@
 - Never reintroduce base44 (`@base44/sdk`, `@base44/vite-plugin`, webhooks, `functions/`).
 - All Cloudflare/wrangler calls go through `workers/api/cf-wrangler.cjs` (fleet OAuth); never print/log/serialize the CF token, and never use `--remote` in this plan (local `--local` state only).
 - Nothing deploys or merges to `main` without Levi's explicit approval. This plan ends at a green, reviewed branch.
-- Worker unit tests run from `workers/api/` with `node --test test/` (no package.json, `.mjs` files). The default suite must stay fast and must NOT require wrangler/network — the real-D1 check is a standalone script (`test/db-smoke.mjs`, not `*.test.mjs`), run on demand.
+- Worker unit tests run from `workers/api/` with `node --test test/` (no package.json, `.mjs` files). The default suite must stay fast and must NOT require wrangler/network — the real-D1 check is a standalone script kept OUTSIDE `test/` at `workers/api/scripts/db-smoke.mjs`, run on demand. (Node's `--test` globs `**/test/**/*.{mjs,js}` — every `.mjs` under a `test/` dir joins the suite regardless of a `.test.` infix, so the script must not live in `test/`.)
 - The frontend has no test framework; frontend task verification is `npm run build` (exit 0) + `npm run lint` (exit 0) + manual, matching the existing hierarchy work.
 
 ---
@@ -515,20 +515,20 @@ git commit -m "feat(db): migration 0005 — add Member tier, relabel Level 1/2, 
 
 ---
 
-### Task 5: Real-D1 smoke script (`test/db-smoke.mjs`)
+### Task 5: Real-D1 smoke script (`scripts/db-smoke.mjs`)
 
 **Files:**
-- Create: `workers/api/test/db-smoke.mjs`
+- Create: `workers/api/scripts/db-smoke.mjs`
 
 **Interfaces:**
 - Consumes: migrations `0001`→`0005`; `cf-wrangler.cjs` (fleet OAuth); wrangler `--local`.
-- Produces: a standalone runnable script — `node test/db-smoke.mjs` (from `workers/api`) prints `SMOKE PASS` and exits 0 on success, prints the failure and exits 1 otherwise. It is NOT picked up by `node --test test/` (filename is `.mjs`, not `.test.mjs`), so the default unit suite stays fast and wrangler-free.
+- Produces: a standalone runnable script — `node scripts/db-smoke.mjs` (from `workers/api`) prints `SMOKE PASS` and exits 0 on success, prints the failure and exits 1 otherwise. It lives OUTSIDE `test/` so `node --test test/` never globs it (Node's `--test` runs every `.mjs` under a `test/` dir), keeping the default unit suite fast and wrangler-free.
 
 **Why this exists:** the `_mock.mjs` harness enforces no SQL constraints, which is why the invite-500 (`NOT NULL constraint failed: users.password_hash`) slipped past every unit test. This script runs the actual invite/patch/delete SQL against a real SQLite so that class of drift fails loudly.
 
 - [ ] **Step 1: Write the smoke script**
 
-Create `workers/api/test/db-smoke.mjs`:
+Create `workers/api/scripts/db-smoke.mjs`:
 
 ```js
 // Real-D1 smoke test — applies migrations 0001..0005 to a fresh LOCAL SQLite (via
@@ -536,8 +536,11 @@ Create `workers/api/test/db-smoke.mjs`:
 // invite/deactivate/delete SQL. Catches schema/constraint drift the mock harness
 // cannot (e.g. the NOT NULL password_hash bug that produced the invite-500).
 //
-// Run:  cd workers/api && node test/db-smoke.mjs
-// Not a *.test.mjs on purpose: `node --test test/` must stay fast and wrangler-free.
+// Run:  cd workers/api && node scripts/db-smoke.mjs
+// Lives OUTSIDE test/ on purpose: `node --test test/` globs every *.{mjs,js} under a
+// test/ directory (pattern **/test/**/*), so ANY name in test/ would join the default
+// suite and drag wrangler + fleet OAuth into it. Keeping it in scripts/ makes it a
+// standalone, run-on-demand check — the unit suite stays fast and wrangler-free.
 // Requires local fleet OAuth (cf-wrangler resolves creds) but never touches --remote.
 
 import { spawnSync } from 'node:child_process'
@@ -611,18 +614,18 @@ try {
 
 - [ ] **Step 2: Run the smoke script to verify it passes**
 
-Run: `cd workers/api && node test/db-smoke.mjs`
+Run: `cd workers/api && node scripts/db-smoke.mjs`
 Expected: prints `SMOKE PASS ...` and exits 0. (First run may take ~10-20s for wrangler cold-starts.)
 
 - [ ] **Step 3: Confirm the default unit suite ignores it and stays green/fast**
 
 Run: `cd workers/api && node --test test/`
-Expected: PASS, and the output does NOT include `db-smoke` (node's test runner only picks up `*.test.*` files).
+Expected: PASS, and the output does NOT mention `db-smoke` — it is not under `test/`, so `node --test`'s `**/test/**/*` glob never reaches it.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add workers/api/test/db-smoke.mjs
+git add workers/api/scripts/db-smoke.mjs
 git commit -m "test(db): real-D1 smoke — migrations + NULL-password invite/patch/delete"
 ```
 
