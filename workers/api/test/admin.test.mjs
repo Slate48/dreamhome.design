@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mockDb, mockContext } from './_mock.mjs'
-import { signJwt, COOKIE } from '../src/lib/auth.js'
+import { signJwt, COOKIE, sha256Hex } from '../src/lib/auth.js'
 import { handleAdminRoutes } from '../src/lib/admin.js'
 
 const SECRET = 'test-secret'
@@ -150,4 +150,94 @@ test('DELETE /api/admin/users/:id: cannot delete a super-admin target', async ()
       ? { first: { id: 'u_other', tier_rank: 0, is_active: 1, has_password: 1, tier_id: 'tier_superadmin' } } : {},
   })
   assert.equal((await handleAdminRoutes(ctx)).status, 403)
+})
+
+test('PATCH /api/admin/users/:id self-branch updates only full_name, ignoring extra fields', async () => {
+  let updateSql = null
+  const jwt = await signJwt({ sub: 'u_ad', role: 'staff', rmb: false }, SECRET)
+  const db = mockDb((sql, binds) => {
+    if (sql.includes('FROM users u LEFT JOIN admin_tiers')) return { first: adminRow }
+    if (sql.startsWith('UPDATE users SET')) { updateSql = sql; return { run: { meta: { changes: 1 } } } }
+    return {}
+  })
+  const ctx = mockContext({ db, cookie: cookieFor(jwt), method: 'PATCH', path: '/api/admin/users/u_ad',
+    body: { full_name: 'Renamed', tier_id: 'tier_superadmin', is_active: 0 } })
+  const res = await handleAdminRoutes(ctx)
+  assert.equal(res.status, 200)
+  assert.match(updateSql, /full_name/)
+  assert.doesNotMatch(updateSql, /tier_id/)
+  assert.doesNotMatch(updateSql, /is_active/)
+})
+
+test('PATCH /api/admin/users/:id: cannot modify a super-admin target', async () => {
+  const ctx = await ctxAs({ id: 'u_sa', role: 'staff', _row: superRow }, {
+    method: 'PATCH', path: '/api/admin/users/u_other', body: { is_active: 0 },
+    reads: (sql) => sql.includes("u.role = 'staff'")
+      ? { first: { id: 'u_other', tier_rank: 0, tier_id: 'tier_superadmin', is_active: 1, has_password: 1 } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 403)
+})
+
+test('PATCH /api/admin/users/:id: cannot modify a peer/higher-ranked target', async () => {
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'PATCH', path: '/api/admin/users/u_peer', body: { is_active: 0 },
+    reads: (sql) => sql.includes("u.role = 'staff'")
+      ? { first: { id: 'u_peer', tier_rank: 1, tier_id: 'tier_admin', is_active: 1, has_password: 1 } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 403)
+})
+
+test('GET /api/admin/users: returns only manageable rows, excluding self and non-subordinates', async () => {
+  const rows = [
+    { id: 'u_sa', tier_rank: 0, tier_name: 'Super Admin', tier_id: 'tier_superadmin', is_active: 1, has_password: 1, email: 'sa@x', full_name: 'SA', invited_by: null },
+    { id: 'u_ad', tier_rank: 1, tier_name: 'Admin', tier_id: 'tier_admin', is_active: 1, has_password: 1, email: 'ad@x', full_name: 'AD', invited_by: null },
+    { id: 'u_mg', tier_rank: 2, tier_name: 'Manager', tier_id: 'tier_manager', is_active: 1, has_password: 1, email: 'mg@x', full_name: 'MG', invited_by: 'u_ad' },
+  ]
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'GET', path: '/api/admin/users',
+    reads: (sql) => sql.includes("WHERE u.role = 'staff'") ? { all: { results: rows } } : {},
+  })
+  const res = await handleAdminRoutes(ctx)
+  assert.equal(res.status, 200)
+  const list = await res.json()
+  assert.equal(list.length, 1)
+  assert.equal(list[0].id, 'u_mg')
+})
+
+test('POST /api/admin/users/:id/reinvite: rejects a user who already has a password (409)', async () => {
+  const ctx = await ctxAs({ id: 'u_sa', role: 'staff', _row: superRow }, {
+    method: 'POST', path: '/api/admin/users/u_active/reinvite',
+    reads: (sql) => sql.includes("u.role = 'staff'")
+      ? { first: { id: 'u_active', tier_rank: 2, tier_id: 'tier_manager', is_active: 1, has_password: 1 } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 409)
+})
+
+test('POST /api/admin/users/:id/reinvite: forbidden for a target the actor cannot manage', async () => {
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'POST', path: '/api/admin/users/u_peer/reinvite',
+    reads: (sql) => sql.includes("u.role = 'staff'")
+      ? { first: { id: 'u_peer', tier_rank: 1, tier_id: 'tier_admin', is_active: 0, has_password: 0 } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 403)
+})
+
+test('POST /api/admin/users: stores only the SHA-256 hash of the invite token, never the raw token', async () => {
+  let insertBinds = null
+  const ctx = await ctxAs({ id: 'u_sa', role: 'staff', _row: superRow }, {
+    method: 'POST', path: '/api/admin/users', body: { email: 'New@Y.com', full_name: 'New', tier_id: 'tier_manager' },
+    reads: (sql, binds) => {
+      if (sql.includes('FROM admin_tiers WHERE id')) return { first: { id: 'tier_manager', rank: 2, capabilities: '["faqs"]', is_system: 0 } }
+      if (sql.includes('FROM users WHERE email')) return { first: null }
+      if (sql.includes('INSERT INTO users')) { insertBinds = binds; return {} }
+      return {}
+    },
+  })
+  const res = await handleAdminRoutes(ctx)
+  assert.equal(res.status, 201)
+  const { invite_url } = await res.json()
+  const rawToken = invite_url.split('/invite/')[1]
+  const expectedHash = await sha256Hex(rawToken)
+  assert.ok(insertBinds.includes(expectedHash), 'INSERT must bind the token hash')
+  assert.ok(!insertBinds.includes(rawToken), 'INSERT must NOT bind the raw token')
 })

@@ -241,7 +241,7 @@ async function reinviteUser(context, id) {
   const target = await loadStaffTarget(context.env, id)
   if (!target) return json({ error: 'not found' }, 404)
   if (!canManage(me.rank, target.tier_rank)) return json({ error: 'Insufficient privileges' }, 403)
-  if (target.has_password && target.is_active) return json({ error: 'That user has already accepted their invite' }, 409)
+  if (target.has_password) return json({ error: 'That user has already set up their account' }, 409)
 
   const rawToken = generateInviteToken()
   const tokenHash = await sha256Hex(rawToken)
@@ -274,6 +274,7 @@ async function patchUser(context, id) {
   if (capGate.response) return capGate.response
   const target = await loadStaffTarget(context.env, id)
   if (!target) return json({ error: 'not found' }, 404)
+  if (target.tier_rank === SUPER_TIER_RANK) return json({ error: 'The super admin cannot be modified' }, 403)
   if (!canManage(me.rank, target.tier_rank)) return json({ error: 'Insufficient privileges' }, 403)
 
   const sets = []
