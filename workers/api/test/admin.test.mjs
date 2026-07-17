@@ -26,6 +26,11 @@ const adminRow = {
   is_active: 1, tier_name: 'Admin', tier_rank: 1,
   tier_caps: '["portfolio","team","faqs","process","investment","testimonials","inquiries","settings","users"]',
 }
+const managerRow = {
+  id: 'u_mg', email: 'mg@x.com', role: 'staff', full_name: 'MG', tier_id: 'tier_manager',
+  is_active: 1, tier_name: 'Level 2', tier_rank: 2,
+  tier_caps: '["portfolio","team","faqs","process","investment","testimonials","inquiries","settings","users"]',
+}
 
 test('non-admin path returns null (falls through to index.js)', async () => {
   const ctx = await ctxAs({ id: 'u_sa', role: 'staff', _row: superRow }, { path: '/api/PortfolioItem' })
@@ -203,6 +208,34 @@ test('GET /api/admin/users: excludes the actor via the id clause even when rank 
   const ids = list.map(r => r.id)
   assert.ok(!ids.includes('u_sa'), 'actor own row must be excluded by the id clause')
   assert.ok(ids.includes('u_ad') && ids.includes('u_mg'), 'lower-ranked rows must be kept')
+  const byId = Object.fromEntries(list.map(r => [r.id, r]))
+  assert.equal(byId.u_ad.can_edit, true)   // super manages anyone
+  assert.equal(byId.u_ad.can_delete, true) // super deletes anyone
+  assert.equal(byId.u_mg.can_edit, true)
+  assert.equal(byId.u_mg.can_delete, true)
+})
+
+test('GET /api/admin/users: non-super viewer hides the super row and annotates edit/delete', async () => {
+  const rows = [
+    { id: 'u_sa', tier_rank: 0, tier_name: 'Super Admin', tier_id: 'tier_superadmin', is_active: 1, has_password: 1, email: 'sa@x', full_name: 'SA', invited_by: null },
+    { id: 'u_ad', tier_rank: 1, tier_name: 'Level 1', tier_id: 'tier_admin', is_active: 1, has_password: 1, email: 'ad@x', full_name: 'AD', invited_by: 'u_sa' },
+    { id: 'u_peer', tier_rank: 1, tier_name: 'Level 1', tier_id: 'tier_admin', is_active: 1, has_password: 1, email: 'peer@x', full_name: 'Peer', invited_by: 'u_sa' },
+    { id: 'u_mem', tier_rank: 3, tier_name: 'Member', tier_id: 'tier_member', is_active: 1, has_password: 1, email: 'mem@x', full_name: 'Mem', invited_by: 'u_ad' },
+  ]
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'GET', path: '/api/admin/users',
+    reads: (sql) => sql.includes("WHERE u.role = 'staff'") ? { all: { results: rows } } : {},
+  })
+  const res = await handleAdminRoutes(ctx)
+  assert.equal(res.status, 200)
+  const list = await res.json()
+  const byId = Object.fromEntries(list.map(r => [r.id, r]))
+  assert.ok(!byId.u_sa, 'super row hidden from a non-super viewer')
+  assert.ok(!byId.u_ad, 'own row excluded')
+  assert.equal(byId.u_peer.can_edit, true)    // canManage(1,1) — peer editable
+  assert.equal(byId.u_peer.can_delete, false) // canDelete(1,1) — peer not deletable
+  assert.equal(byId.u_mem.can_edit, true)
+  assert.equal(byId.u_mem.can_delete, true)   // rank 3 is strictly below rank 1
 })
 
 test('POST /api/admin/users/:id/reinvite: rejects a user who already has a password (409)', async () => {

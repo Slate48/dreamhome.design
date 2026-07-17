@@ -9,7 +9,7 @@
 
 import { json, parseJson, nowIso, newId } from './http.js'
 import { requireStaff, requireCapability, requireAuth, getSession, sha256Hex, generateInviteToken, INVITE_TTL_S, hashPassword, verifyPassword, signJwt, buildSessionCookie } from './auth.js'
-import { isValidCapabilitySet, canManage, capsSubsetOf } from './rbac.js'
+import { isValidCapabilitySet, canManage, canDelete, capsSubsetOf } from './rbac.js'
 
 const SUPER_TIER_RANK = 0
 
@@ -174,7 +174,10 @@ function userStatus(row) {
   return row.has_password ? 'disabled' : 'pending'
 }
 
-// GET /api/admin/users — staff you may manage (rank strictly below yours; super sees all).
+// GET /api/admin/users — the roster the viewer may see. A non-super viewer sees
+// every staff row except the super account (rank 0) and their own; super sees all
+// but self. Each row is annotated can_edit/can_delete; every mutation re-checks
+// server-side, so these flags are for UI affordance only (defense in depth).
 async function listUsers(context) {
   const auth = await requireCapability(context, 'users')
   if (auth.response) return auth.response
@@ -189,11 +192,13 @@ async function listUsers(context) {
        ORDER BY t.rank ASC, u.full_name ASC`
     ).all()
   const rows = (rs.results || [])
-    .filter((r) => r.id !== me.id && canManage(me.rank, r.tier_rank))
+    .filter((r) => r.id !== me.id && (me.rank === SUPER_TIER_RANK || r.tier_rank !== SUPER_TIER_RANK))
     .map((r) => ({
       id: r.id, email: r.email, full_name: r.full_name, tier_id: r.tier_id,
       tier_name: r.tier_name, rank: r.tier_rank, is_active: !!r.is_active,
       status: userStatus(r), invited_by: r.invited_by || null,
+      can_edit: canManage(me.rank, r.tier_rank),
+      can_delete: canDelete(me.rank, r.tier_rank),
     }))
   return json(rows)
 }
