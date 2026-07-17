@@ -107,3 +107,47 @@ test('DELETE /api/admin/tiers/:id: system tier cannot be deleted (403)', async (
   })
   assert.equal((await handleAdminRoutes(ctx)).status, 403)
 })
+
+test('POST /api/admin/users: rejects assigning the super tier', async () => {
+  const ctx = await ctxAs({ id: 'u_sa', role: 'staff', _row: superRow }, {
+    method: 'POST', path: '/api/admin/users', body: { email: 'x@y.com', full_name: 'X', tier_id: 'tier_superadmin' },
+    reads: (sql) => sql.includes('FROM admin_tiers WHERE id')
+      ? { first: { id: 'tier_superadmin', rank: 0, capabilities: '[]', is_system: 1 } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 403)
+})
+
+test('POST /api/admin/users: admin cannot invite into a tier at/above its own rank', async () => {
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'POST', path: '/api/admin/users', body: { email: 'x@y.com', full_name: 'X', tier_id: 'tier_admin' },
+    reads: (sql) => sql.includes('FROM admin_tiers WHERE id')
+      ? { first: { id: 'tier_admin', rank: 1, capabilities: '["portfolio"]', is_system: 0 } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 403)
+})
+
+test('POST /api/admin/users: creates a pending invite and returns a copy-link', async () => {
+  const ctx = await ctxAs({ id: 'u_sa', role: 'staff', _row: superRow }, {
+    method: 'POST', path: '/api/admin/users', body: { email: 'New@Y.com', full_name: 'New', tier_id: 'tier_manager' },
+    reads: (sql) => {
+      if (sql.includes('FROM admin_tiers WHERE id')) return { first: { id: 'tier_manager', rank: 2, capabilities: '["faqs"]', is_system: 0 } }
+      if (sql.includes('FROM users WHERE email')) return { first: null } // email free
+      return {}
+    },
+  })
+  const res = await handleAdminRoutes(ctx)
+  assert.equal(res.status, 201)
+  const j = await res.json()
+  assert.match(j.invite_url, /^https:\/\/portal\.dreamhome\.design\/invite\/[A-Za-z0-9_-]+$/)
+  assert.equal(j.user.email, 'new@y.com') // lowercased
+  assert.equal(j.user.status, 'pending')
+})
+
+test('DELETE /api/admin/users/:id: cannot delete a super-admin target', async () => {
+  const ctx = await ctxAs({ id: 'u_sa', role: 'staff', _row: superRow }, {
+    method: 'DELETE', path: '/api/admin/users/u_other',
+    reads: (sql) => sql.includes("u.role = 'staff'")
+      ? { first: { id: 'u_other', tier_rank: 0, is_active: 1, has_password: 1, tier_id: 'tier_superadmin' } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 403)
+})
