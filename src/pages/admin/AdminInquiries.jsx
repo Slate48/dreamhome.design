@@ -5,6 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from '@/components/ui/table';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog';
 
 const STATUS_VARIANT = {
   New: 'default',
@@ -28,6 +31,7 @@ export default function AdminInquiries() {
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => { load(); }, []);
 
@@ -85,8 +89,14 @@ export default function AdminInquiries() {
             <TableBody>
               {inquiries.map((inquiry) => (
                 <TableRow key={inquiry.id}>
-                  <TableCell className="font-body font-medium text-foreground whitespace-nowrap">
-                    {inquiry.name}
+                  <TableCell className="font-body font-medium whitespace-nowrap">
+                    <button
+                      type="button"
+                      onClick={() => setSelected(inquiry)}
+                      className="text-foreground hover:text-gold focus:text-gold underline-offset-4 hover:underline focus:underline focus:outline-none transition-colors"
+                    >
+                      {inquiry.name}
+                    </button>
                   </TableCell>
                   <TableCell className="font-body text-sm text-muted-foreground">
                     <div className="flex items-center gap-1.5">
@@ -121,6 +131,66 @@ export default function AdminInquiries() {
           </Table>
         </div>
       )}
+
+      <Dialog open={!!selected} onOpenChange={(o) => { if (!o) setSelected(null); }}>
+        <DialogContent className="max-w-lg">
+          {selected && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-heading text-foreground">{selected.name}</DialogTitle>
+                <DialogDescription className="font-body">
+                  Contact form submission &middot; received {formatDate(selected.created_date)}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 mt-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant={STATUS_VARIANT[selected.status] || 'outline'}>
+                    {selected.status || 'New'}
+                  </Badge>
+                </div>
+
+                <div className="font-body text-sm text-muted-foreground space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Mail size={14} />
+                    {selected.email ? (
+                      <a href={`mailto:${selected.email}`} className="hover:text-gold transition-colors">
+                        {selected.email}
+                      </a>
+                    ) : '—'}
+                  </div>
+                  {selected.phone && (
+                    <div className="flex items-center gap-1.5">
+                      <Phone size={14} />
+                      <a href={`tel:${selected.phone}`} className="hover:text-gold transition-colors">
+                        {selected.phone}
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-sm font-body">
+                  <div>
+                    <p className="text-xs text-muted-foreground tracking-wide uppercase mb-1">Project Type</p>
+                    <p className="text-foreground">{selected.project_type || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground tracking-wide uppercase mb-1">How Heard</p>
+                    <p className="text-foreground">{selected.how_heard || '—'}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs text-muted-foreground tracking-wide uppercase mb-1 font-body">Message</p>
+                  <div className="font-body text-sm text-foreground whitespace-pre-wrap max-h-64 overflow-y-auto rounded-lg border border-border bg-cream/50 p-3">
+                    {selected.message}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
