@@ -517,3 +517,64 @@ test('PATCH /api/admin/users/:id: super target carrying email+password still 403
   assert.equal((await handleAdminRoutes(ctx)).status, 403)
   assert.equal(updateRan, false, 'the UPDATE must not run for a super-admin target')
 })
+
+test('POST /api/auth/change-email: unauthenticated is 401', async () => {
+  const db = mockDb(() => ({}))
+  const ctx = mockContext({ db, method: 'POST', path: '/api/auth/change-email',
+    body: { current_password: 'x', new_email: 'new@y.com' } })
+  assert.equal((await handleAdminRoutes(ctx)).status, 401)
+})
+
+test('POST /api/auth/change-email: invalid email format is 400', async () => {
+  const stored = await hashPassword('correcthorse')
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'POST', path: '/api/auth/change-email',
+    body: { current_password: 'correcthorse', new_email: 'nope' },
+    reads: (sql) => sql.includes('SELECT password_hash FROM users') ? { first: { password_hash: stored } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 400)
+})
+
+test('POST /api/auth/change-email: wrong current password is 403', async () => {
+  const stored = await hashPassword('correcthorse')
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'POST', path: '/api/auth/change-email',
+    body: { current_password: 'wrongpw', new_email: 'new@y.com' },
+    reads: (sql) => sql.includes('SELECT password_hash FROM users') ? { first: { password_hash: stored } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 403)
+})
+
+test('POST /api/auth/change-email: duplicate email is 409', async () => {
+  const stored = await hashPassword('correcthorse')
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'POST', path: '/api/auth/change-email',
+    body: { current_password: 'correcthorse', new_email: 'taken@y.com' },
+    reads: (sql) => {
+      if (sql.includes('SELECT password_hash FROM users')) return { first: { password_hash: stored } }
+      if (sql.includes('AND id != ?')) return { first: { id: 'u_other' } }
+      return {}
+    },
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 409)
+})
+
+test('POST /api/auth/change-email: success updates the email (200, trimmed + lowercased)', async () => {
+  const stored = await hashPassword('correcthorse')
+  let updateBinds = null
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'POST', path: '/api/auth/change-email',
+    body: { current_password: 'correcthorse', new_email: '  Fresh@Y.com ' },
+    reads: (sql, binds) => {
+      if (sql.includes('SELECT password_hash FROM users')) return { first: { password_hash: stored } }
+      if (sql.includes('AND id != ?')) return { first: null }
+      if (sql.startsWith('UPDATE users SET email')) { updateBinds = binds; return { run: { meta: { changes: 1 } } } }
+      return {}
+    },
+  })
+  const res = await handleAdminRoutes(ctx)
+  assert.equal(res.status, 200)
+  const j = await res.json()
+  assert.equal(j.email, 'fresh@y.com')
+  assert.ok(updateBinds.includes('fresh@y.com'), 'UPDATE binds the trimmed + lowercased email')
+})
