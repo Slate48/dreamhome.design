@@ -221,18 +221,12 @@ export default function UsersPanel() {
   );
 }
 
-// Renders tier <SelectItem>s with the tier name and its plain-language description.
-// Shared by the Invite and Edit dropdowns.
+// Renders tier <SelectItem>s (name only). The plain-language descriptions live
+// in the People-tab "What the levels mean" legend; repeating them inside the
+// dropdown options overflowed the popover. Shared by the Invite and Edit dropdowns.
 function TierOptions({ tiers }) {
   return tiers.map((t) => (
-    <SelectItem key={t.id} value={t.id}>
-      <div className="flex flex-col">
-        <span>{t.name}</span>
-        {tierDescription(t.id) && (
-          <span className="text-xs text-muted-foreground">{tierDescription(t.id)}</span>
-        )}
-      </div>
-    </SelectItem>
+    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
   ));
 }
 
