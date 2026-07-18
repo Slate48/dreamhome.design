@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { Copy, UserPlus, Trash2, Pencil } from 'lucide-react';
+import { tierDescription } from '@/components/admin/tierDescriptions';
 
 const STATUS_STYLES = {
   active: 'bg-green-100 text-green-700',
@@ -118,6 +119,15 @@ export default function UsersPanel() {
         </Button>
       </div>
 
+      <div className="mb-6 rounded-lg border border-border bg-muted/30 p-4 space-y-1.5">
+        <p className="font-body text-xs font-medium text-foreground">What the levels mean</p>
+        {tiers.filter((t) => !t.is_system).map((t) => (
+          <p key={t.id} className="font-body text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">{t.name}:</span> {tierDescription(t.id)}
+          </p>
+        ))}
+      </div>
+
       {loading ? (
         <p className="font-body text-sm text-muted-foreground">Loading…</p>
       ) : (
@@ -211,6 +221,21 @@ export default function UsersPanel() {
   );
 }
 
+// Renders tier <SelectItem>s with the tier name and its plain-language description.
+// Shared by the Invite and Edit dropdowns.
+function TierOptions({ tiers }) {
+  return tiers.map((t) => (
+    <SelectItem key={t.id} value={t.id}>
+      <div className="flex flex-col">
+        <span>{t.name}</span>
+        {tierDescription(t.id) && (
+          <span className="text-xs text-muted-foreground">{tierDescription(t.id)}</span>
+        )}
+      </div>
+    </SelectItem>
+  ));
+}
+
 function InviteDialog({ open, onClose, tiers, onInvited, copyLink }) {
   const { toast } = useToast();
   const [email, setEmail] = useState('');
@@ -263,7 +288,7 @@ function InviteDialog({ open, onClose, tiers, onInvited, copyLink }) {
               <Select value={tierId} onValueChange={setTierId}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Choose a tier" /></SelectTrigger>
                 <SelectContent>
-                  {tiers.map((t) => (<SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>))}
+                  <TierOptions tiers={tiers} />
                 </SelectContent>
               </Select>
             </div>
@@ -290,16 +315,27 @@ function InviteDialog({ open, onClose, tiers, onInvited, copyLink }) {
 function EditDialog({ target, onClose, tiers, onSave }) {
   const [fullName, setFullName] = useState('');
   const [tierId, setTierId] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (target) { setFullName(target.full_name || ''); setTierId(target.tier_id || ''); }
+    if (target) {
+      setFullName(target.full_name || '');
+      setTierId(target.tier_id || '');
+      setEmail(target.email || '');
+      setPassword('');
+    }
   }, [target]);
+
+  const pwTooShort = password.length > 0 && password.length < 8;
 
   const submit = async () => {
     setSaving(true);
     try {
-      await onSave(target.id, { full_name: fullName, tier_id: tierId });
+      const body = { full_name: fullName, tier_id: tierId, email: email.trim() };
+      if (password) body.password = password;
+      await onSave(target.id, body);
     } finally {
       setSaving(false);
     }
@@ -315,19 +351,26 @@ function EditDialog({ target, onClose, tiers, onSave }) {
             <Input id="edit-name" value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1" />
           </div>
           <div>
+            <Label htmlFor="edit-email" className="text-xs">Email</Label>
+            <Input id="edit-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1" />
+          </div>
+          <div>
             <Label className="text-xs">Tier</Label>
             <Select value={tierId} onValueChange={setTierId}>
               <SelectTrigger className="mt-1"><SelectValue placeholder="Choose a tier" /></SelectTrigger>
-              <SelectContent>
-                {tiers.map((t) => (<SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>))}
-              </SelectContent>
+              <SelectContent><TierOptions tiers={tiers} /></SelectContent>
             </Select>
+          </div>
+          <div>
+            <Label htmlFor="edit-password" className="text-xs">Set a new password</Label>
+            <Input id="edit-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1" />
+            <p className="mt-1 text-xs text-muted-foreground">Leave blank to keep the current password. Minimum 8 characters.</p>
           </div>
         </div>
         <DialogFooter>
           <Button
             className="bg-gold hover:bg-gold/90 text-white"
-            disabled={saving || !fullName || !tierId}
+            disabled={saving || !fullName || !tierId || !email.trim() || pwTooShort}
             onClick={submit}
           >
             {saving ? 'Saving…' : 'Save changes'}

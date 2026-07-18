@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { ChevronUp, ChevronDown, Trash2, Plus, Lock } from 'lucide-react';
+import { tierDescription } from '@/components/admin/tierDescriptions';
 
 const CAPABILITIES = [
   'portfolio', 'team', 'faqs', 'process', 'investment', 'testimonials', 'inquiries', 'settings', 'users',
@@ -107,6 +108,9 @@ export default function TiersPanel() {
                       className="h-8 w-36"
                       onBlur={(e) => onRename(t, e.target.value)}
                     />
+                  )}
+                  {tierDescription(t.id) && (
+                    <p className="mt-1 text-xs text-muted-foreground max-w-xs">{tierDescription(t.id)}</p>
                   )}
                 </TableCell>
                 {CAPABILITIES.map((c) => (

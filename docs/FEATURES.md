@@ -64,7 +64,7 @@ Migration target: one D1 table each in `wl-dreamhome-db` (+ a Worker CRUD route)
 ## Data source for the D1 seed (migration P2/P3)
 The D1 seed sources **from in-repo record files + a full DB export Levi provides** —
 NOT a base44 API scrape (base44 now writes the database records directly into this
-repo, `Cinedex/dream-home-design`).
+repo, `Slate48/dreamhome.design`).
 - **Schemas:** `base44/entities/*.jsonc` (present today — types/enums/defaults above).
 - **Records (expected):** base44 is pushing record data into the repo. As of
   onboarding (2026-07-06) **no record/data files have landed yet** — the `base44/`

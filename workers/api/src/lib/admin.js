@@ -50,6 +50,7 @@ export async function handleAdminRoutes(context) {
     return json({ error: 'method not allowed' }, 405)
   }
   if (pathname === '/api/auth/change-password' && method === 'POST') return changePassword(context)
+  if (pathname === '/api/auth/change-email' && method === 'POST') return changeEmail(context)
 
   return null
 }
@@ -311,6 +312,17 @@ async function patchUser(context, id) {
     }
     sets.push('tier_id = ?'); binds.push(body.tier_id)
   }
+  if (typeof body.email === 'string' && body.email.trim()) {
+    const email = body.email.trim().toLowerCase()
+    if (!isValidEmail(email)) return json({ error: 'Enter a valid email address' }, 400)
+    const dupe = await context.env.DB.prepare('SELECT id FROM users WHERE email = ? AND id != ?').bind(email, id).first()
+    if (dupe) return json({ error: 'That email is already in use' }, 409)
+    sets.push('email = ?'); binds.push(email)
+  }
+  if (typeof body.password === 'string' && body.password) {
+    if (body.password.length < MIN_PASSWORD_LEN) return json({ error: `Password must be at least ${MIN_PASSWORD_LEN} characters` }, 400)
+    sets.push('password_hash = ?'); binds.push(await hashPassword(body.password))
+  }
   if (!sets.length) return json({ error: 'no writable fields' }, 400)
   sets.push('updated_date = ?'); binds.push(nowIso())
   binds.push(id)
@@ -395,6 +407,37 @@ async function changePassword(context) {
   await context.env.DB.prepare('UPDATE users SET password_hash = ?, updated_date = ? WHERE id = ?')
     .bind(await hashPassword(next), nowIso(), auth.user.id).run()
   return json({ success: true })
+}
+
+// POST /api/auth/change-email  { current_password, new_email }
+// Self-service: any signed-in user changes their own sign-in email. The session
+// survives because getSession resolves the user by JWT `sub` (id), not by email.
+// Wrong-password returns 403 (per spec — proving identity is an authorization step;
+// change-password returns 400 for the same case, kept as-is to avoid churn).
+async function changeEmail(context) {
+  const auth = await requireAuth(context)
+  if (auth.response) return auth.response
+  const body = await parseJson(context.request)
+  const current = body.current_password || ''
+  const newEmail = (body.new_email || '').trim().toLowerCase()
+  if (!isValidEmail(newEmail)) return json({ error: 'Enter a valid email address' }, 400)
+
+  const row = await context.env.DB.prepare('SELECT password_hash FROM users WHERE id = ?').bind(auth.user.id).first()
+  const ok = await verifyPassword(current, row ? row.password_hash : null)
+  if (!ok) return json({ error: 'Current password is incorrect' }, 403)
+
+  const dupe = await context.env.DB.prepare('SELECT id FROM users WHERE email = ? AND id != ?').bind(newEmail, auth.user.id).first()
+  if (dupe) return json({ error: 'That email is already in use' }, 409)
+
+  await context.env.DB.prepare('UPDATE users SET email = ?, updated_date = ? WHERE id = ?')
+    .bind(newEmail, nowIso(), auth.user.id).run()
+  return json({ success: true, email: newEmail })
+}
+
+// Lightweight email-format check (Worker stays dependency-free). Shared by
+// patchUser and changeEmail. Not RFC-exhaustive — a pragmatic guard against typos.
+function isValidEmail(s) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)
 }
 
 function safeParseArray(text) {
