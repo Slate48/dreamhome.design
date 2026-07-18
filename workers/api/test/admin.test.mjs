@@ -438,3 +438,82 @@ test('POST /api/auth/change-password: updates the password when current is corre
   })
   assert.equal((await handleAdminRoutes(ctx)).status, 200)
 })
+
+test('PATCH /api/admin/users/:id: updates a lower user’s email (trimmed + lowercased, 200)', async () => {
+  let updateSql = null, updateBinds = null
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'PATCH', path: '/api/admin/users/u_mem', body: { email: '  New.Addr@Example.com ' },
+    reads: (sql, binds) => {
+      if (sql.includes("u.role = 'staff'")) return { first: { id: 'u_mem', tier_rank: 3, tier_id: 'tier_member', is_active: 1, has_password: 1 } }
+      if (sql.includes('AND id != ?')) return { first: null } // email free
+      if (sql.startsWith('UPDATE users SET')) { updateSql = sql; updateBinds = binds; return { run: { meta: { changes: 1 } } } }
+      return {}
+    },
+  })
+  const res = await handleAdminRoutes(ctx)
+  assert.equal(res.status, 200)
+  assert.match(updateSql, /email = \?/)
+  assert.ok(updateBinds.includes('new.addr@example.com'), 'email stored trimmed + lowercased')
+})
+
+test('PATCH /api/admin/users/:id: duplicate email is rejected (409)', async () => {
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'PATCH', path: '/api/admin/users/u_mem', body: { email: 'taken@example.com' },
+    reads: (sql) => {
+      if (sql.includes("u.role = 'staff'")) return { first: { id: 'u_mem', tier_rank: 3, tier_id: 'tier_member', is_active: 1, has_password: 1 } }
+      if (sql.includes('AND id != ?')) return { first: { id: 'u_someone_else' } } // email taken
+      return {}
+    },
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 409)
+})
+
+test('PATCH /api/admin/users/:id: invalid email format is rejected (400)', async () => {
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'PATCH', path: '/api/admin/users/u_mem', body: { email: 'not-an-email' },
+    reads: (sql) => sql.includes("u.role = 'staff'")
+      ? { first: { id: 'u_mem', tier_rank: 3, tier_id: 'tier_member', is_active: 1, has_password: 1 } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 400)
+})
+
+test('PATCH /api/admin/users/:id: sets a new password (hashes, writes password_hash, never raw, 200)', async () => {
+  let updateSql = null, updateBinds = null
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'PATCH', path: '/api/admin/users/u_mem', body: { password: 'brandnewpw1' },
+    reads: (sql, binds) => {
+      if (sql.includes("u.role = 'staff'")) return { first: { id: 'u_mem', tier_rank: 3, tier_id: 'tier_member', is_active: 1, has_password: 1 } }
+      if (sql.startsWith('UPDATE users SET')) { updateSql = sql; updateBinds = binds; return { run: { meta: { changes: 1 } } } }
+      return {}
+    },
+  })
+  const res = await handleAdminRoutes(ctx)
+  assert.equal(res.status, 200)
+  assert.match(updateSql, /password_hash = \?/)
+  assert.ok(updateBinds.some((b) => typeof b === 'string' && b.startsWith('v1:')), 'a v1: password hash is bound')
+  assert.ok(!updateBinds.includes('brandnewpw1'), 'the raw password is never stored')
+})
+
+test('PATCH /api/admin/users/:id: rejects a short new password (400)', async () => {
+  const ctx = await ctxAs({ id: 'u_ad', role: 'staff', _row: adminRow }, {
+    method: 'PATCH', path: '/api/admin/users/u_mem', body: { password: 'short' },
+    reads: (sql) => sql.includes("u.role = 'staff'")
+      ? { first: { id: 'u_mem', tier_rank: 3, tier_id: 'tier_member', is_active: 1, has_password: 1 } } : {},
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 400)
+})
+
+test('PATCH /api/admin/users/:id: super target carrying email+password still 403s before any write', async () => {
+  let updateRan = false
+  const ctx = await ctxAs({ id: 'u_sa', role: 'staff', _row: superRow }, {
+    method: 'PATCH', path: '/api/admin/users/u_other',
+    body: { email: 'x@y.com', password: 'longenough1' },
+    reads: (sql) => {
+      if (sql.includes("u.role = 'staff'")) return { first: { id: 'u_other', tier_rank: 0, tier_id: 'tier_superadmin', is_active: 1, has_password: 1 } }
+      if (sql.startsWith('UPDATE users SET')) { updateRan = true; return {} }
+      return {}
+    },
+  })
+  assert.equal((await handleAdminRoutes(ctx)).status, 403)
+  assert.equal(updateRan, false, 'the UPDATE must not run for a super-admin target')
+})

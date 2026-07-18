@@ -311,6 +311,17 @@ async function patchUser(context, id) {
     }
     sets.push('tier_id = ?'); binds.push(body.tier_id)
   }
+  if (typeof body.email === 'string' && body.email.trim()) {
+    const email = body.email.trim().toLowerCase()
+    if (!isValidEmail(email)) return json({ error: 'Enter a valid email address' }, 400)
+    const dupe = await context.env.DB.prepare('SELECT id FROM users WHERE email = ? AND id != ?').bind(email, id).first()
+    if (dupe) return json({ error: 'That email is already in use' }, 409)
+    sets.push('email = ?'); binds.push(email)
+  }
+  if (typeof body.password === 'string' && body.password) {
+    if (body.password.length < MIN_PASSWORD_LEN) return json({ error: `Password must be at least ${MIN_PASSWORD_LEN} characters` }, 400)
+    sets.push('password_hash = ?'); binds.push(await hashPassword(body.password))
+  }
   if (!sets.length) return json({ error: 'no writable fields' }, 400)
   sets.push('updated_date = ?'); binds.push(nowIso())
   binds.push(id)
@@ -395,6 +406,12 @@ async function changePassword(context) {
   await context.env.DB.prepare('UPDATE users SET password_hash = ?, updated_date = ? WHERE id = ?')
     .bind(await hashPassword(next), nowIso(), auth.user.id).run()
   return json({ success: true })
+}
+
+// Lightweight email-format check (Worker stays dependency-free). Shared by
+// patchUser and changeEmail. Not RFC-exhaustive — a pragmatic guard against typos.
+function isValidEmail(s) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)
 }
 
 function safeParseArray(text) {
