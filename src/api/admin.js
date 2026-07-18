@@ -31,3 +31,5 @@ export const getInvite = (token) => req(`/api/auth/invite/${token}`);
 export const acceptInvite = (token, password) => req(`/api/auth/invite/${token}`, { method: 'POST', body: { password } });
 export const changePassword = (current_password, new_password) =>
   req('/api/auth/change-password', { method: 'POST', body: { current_password, new_password } });
+export const changeEmail = (current_password, new_email) =>
+  req('/api/auth/change-email', { method: 'POST', body: { current_password, new_email } });

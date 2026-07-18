@@ -21,6 +21,7 @@ import AdminSettings from './pages/admin/AdminSettings';
 import AdminTestimonials from './pages/admin/AdminTestimonials';
 import AdminInquiries from './pages/admin/AdminInquiries';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminAccount from './pages/admin/AdminAccount';
 
 // Auth
 import Login from './pages/Login';
@@ -137,6 +138,7 @@ const AuthenticatedApp = () => {
         <Route path="/admin/inquiries" element={<CapabilityGuard capability="inquiries"><AdminInquiries /></CapabilityGuard>} />
         <Route path="/admin/settings" element={<CapabilityGuard capability="settings"><AdminSettings /></CapabilityGuard>} />
         <Route path="/admin/users" element={<CapabilityGuard capability="users"><AdminUsers /></CapabilityGuard>} />
+        <Route path="/admin/account" element={<AdminAccount />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />

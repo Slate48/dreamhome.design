@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
   LayoutGrid, Users, HelpCircle, GitBranch, DollarSign,
-  Settings, Image, Menu, X, LogOut, ChevronRight, Star, Inbox, ShieldCheck
+  Settings, Image, Menu, X, LogOut, ChevronRight, Star, Inbox, ShieldCheck, UserCog
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -60,6 +60,19 @@ export default function AdminLayout() {
               </Link>
             );
           })}
+          <Link
+            to="/admin/account"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-body text-sm transition-colors ${
+              location.pathname === '/admin/account'
+                ? 'bg-gold text-white'
+                : 'text-white/60 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <UserCog size={16} />
+            Account
+            {location.pathname === '/admin/account' && <ChevronRight size={14} className="ml-auto" />}
+          </Link>
         </nav>
 
         <div className="p-4 border-t border-white/10 space-y-2">
