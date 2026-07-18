@@ -578,3 +578,19 @@ test('POST /api/auth/change-email: success updates the email (200, trimmed + low
   assert.equal(j.email, 'fresh@y.com')
   assert.ok(updateBinds.includes('fresh@y.com'), 'UPDATE binds the trimmed + lowercased email')
 })
+
+test(`PATCH /api/admin/users/:id: higher-ranked target carrying email+password is 403'd before any write`, async () => {
+  let updateRan = false
+  const ctx = await ctxAs({ id: 'u_mg', role: 'staff', _row: managerRow }, {
+    method: 'PATCH', path: '/api/admin/users/u_ad',
+    body: { email: 'x@y.com', password: 'longenough1' },
+    reads: (sql) => {
+      if (sql.includes("u.role = 'staff'")) return { first: { id: 'u_ad', tier_rank: 1, tier_id: 'tier_admin', is_active: 1, has_password: 1 } }
+      if (sql.startsWith('UPDATE users SET')) { updateRan = true; return {} }
+      return {}
+    },
+  })
+  const res = await handleAdminRoutes(ctx)
+  assert.equal(res.status, 403)
+  assert.equal(updateRan, false, 'the UPDATE must not run for a higher-ranked target')
+})
