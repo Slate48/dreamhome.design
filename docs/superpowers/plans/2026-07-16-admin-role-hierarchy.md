@@ -2,6 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **FleetManager retirement update (2026-07-22):** any Cloudflare/wrangler
+> instruction in this plan must use the repo-local wrapper
+> `workers/api/cf-wrangler.cjs` and app-owned/runtime secrets. Do not use
+> `global_files` credential helpers or FleetManager provisioning scripts.
+
 **Goal:** Give staff a ranked, capability-based admin hierarchy where anyone can create/manage users ranked below them, with `super_admin` reserved as a locked singleton, onboarding via tokenized copy-link invites.
 
 **Architecture:** D1 gains an `admin_tiers` table (name + unique rank + capability JSON) and `users` gains `tier_id`/`is_active`/invite columns. The Worker resolves the caller's live rank + capabilities on every request (JOIN in `getSession`) and gates each route by capability; new `/api/admin/*` and `/api/auth/invite/*` handlers live in a focused `admin.js` module with pure rules in `rbac.js`. The React SPA reads capabilities from `/api/auth/me` to filter nav and guard routes (UI only — the Worker is the enforcement boundary).
@@ -12,7 +17,7 @@
 
 - **base44 is HARD-CUT** — never import `@base44/sdk`, `@base44/vite-plugin`, base44 webhooks, or base44 `functions/`.
 - **Worker stays dependency-free** — Web Crypto / fetch only; add no npm packages to `workers/api`.
-- **All Cloudflare/wrangler calls go through the fleet credential isolation** (`resolveCfCreds(null)` + `cfDeployEnv()`); the Worker deploys **manually** via fleet OAuth (CI has no token, project not in `projects.json`). **Never print/log/serialize the CF token.**
+- **All Cloudflare/wrangler calls go through the repo-local wrapper** (`workers/api/cf-wrangler.cjs`); the Worker deploys manually with app-owned/runtime secrets. **Never print/log/serialize the CF token.**
 - **Deploy pipeline:** `staging` → dev.dreamhome.design (verify) → PR `staging`→`main` (live, protected). Feature branch is `claude/admin-role-hierarchy`.
 - **Tenancy confidential** — the agency label lives only in the repo/PROJECT.md; never broadcast it.
 - **super_admin is a permanent singleton** — the system tier (rank 0, `is_system=1`) and the super_admin account cannot be created, assigned, renamed, reordered, demoted, deactivated, or deleted through any API path.
@@ -137,7 +142,7 @@ git commit -m "feat(db): 0003 admin_tiers + user tier/invite columns + role back
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ```
 
-> Remote D1 apply (`wrangler d1 migrations apply wl-dreamhome-db --remote`) is deferred to the deploy task (Task 15) and runs through fleet OAuth.
+> Remote D1 apply (`wrangler d1 migrations apply wl-dreamhome-db --remote`) is deferred to the deploy task (Task 15) and runs through app-owned/runtime Cloudflare credentials.
 
 ---
 
@@ -2338,7 +2343,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 **Interfaces:** consumes the full feature; produces a verified live deployment.
 
-> Deploy actions run through the fleet credential isolation and require Levi's go per project discipline. The Worker is deployed **manually** (CI has no token). Do not print the CF token.
+> Deploy actions run through the repo-local Cloudflare wrapper and require Levi's go per project discipline. The Worker is deployed **manually** (CI has no token). Do not print the CF token.
 
 - [ ] **Step 1: Full local gate**
 
@@ -2364,12 +2369,12 @@ gh pr create --base staging --head claude/admin-role-hierarchy \
 🤖 Generated with [Claude Code](https://claude.com/claude-code)"
 ```
 
-- [ ] **Step 3: Apply migration 0003 to remote D1 (fleet OAuth)**
+- [ ] **Step 3: Apply migration 0003 to remote D1 with app-owned/runtime secrets**
 
-Using the fleet credential isolation (mirror `scratchpad/cf-deploy-worker.cjs`; never print the token):
+Using the repo-local Cloudflare wrapper (mirror `scratchpad/cf-deploy-worker.cjs`; never print the token):
 
 ```bash
-# via the fleet-OAuth wrangler wrapper, from workers/api:
+# via the repo-local wrangler wrapper, from workers/api:
 #   npx wrangler d1 migrations apply wl-dreamhome-db --remote
 ```
 
@@ -2382,10 +2387,10 @@ Then verify exactly one super admin exists and the backfill landed:
 
 Expected: exactly one row at rank 0 (the intended super admin — confirm with Levi it is the correct account, since the pre-migration data showed a "48Labs Admin" super_admin). If more than one, demote the extras to `tier_admin` before continuing.
 
-- [ ] **Step 4: Deploy the Worker manually (fleet OAuth)**
+- [ ] **Step 4: Deploy the Worker manually**
 
 ```bash
-# node scratchpad/cf-deploy-worker.cjs deploy   (resolveCfCreds(null) + cfDeployEnv; token never printed)
+# node workers/api/cf-wrangler.cjs deploy   # token never printed
 ```
 
 Expected: a new `wl-dreamhome-api` version id; `/api/auth/me` → 401 signed-out; public GET still 200.

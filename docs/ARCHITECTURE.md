@@ -32,11 +32,12 @@ account**.
   (`Slate48/dreamhome.design`); a full export is also being provided by Levi. These
   are the D1 seed source (NOT an API scrape).
 
-## Target backend — Cloudflare (fleet account)
-- **Account:** 48Labs fleet (Levi Elizaga, `37172187c20bd1fcc38760c946161fb0`),
-  `cfOwnership: fleet-shared`. All wrangler via `global_files/scripts/cf-provision.js`
-  → `cfDeployEnv()` (clears ambient CF token, pins account, OAuth for fleet). Never
-  bypass.
+## Target backend — Cloudflare
+- **Account:** configured by the owning Cloudflare project/runtime. Wrangler
+  operations must go through the repo-local wrapper
+  `workers/api/cf-wrangler.cjs`, which clears ambient global-token auth, pins the
+  configured account, and reads app-owned environment variables. Do not import
+  deployment credentials or provisioning helpers from `global_files`.
 - **Pages (frontend):** `wl-dreamhome-site` → https://wl-dreamhome-site.pages.dev
   (live as of Phase 0; custom domain `dreamhome.design` pending zone add — see PROJECT.md).
 - **Worker (API):** `wl-dreamhome-api` (planned P3) — `/api/<entity>` CRUD + `/api/auth/*`.
@@ -49,19 +50,18 @@ account**.
 - **Email (candidate):** Resend for the Contact form / notifications (none today).
 
 ## Naming (white-label `wl-` convention)
-Fleet-account resources for a white-label client are prefixed `wl-<endclient>-<...>`:
+Cloudflare resources for a white-label client are prefixed `wl-<endclient>-<...>`:
 Pages `wl-dreamhome-site`, Worker `wl-dreamhome-api`, D1 `wl-dreamhome-db`. Codified
 in `global_files/projects.json` → `categorySchema` (WHITE-LABEL NAMING STANDARD).
 
 ## Deploy flow (Phase 0, current)
 **Frontend (Pages) is git-connected:** the `wl-dreamhome-site` Pages project builds
 and deploys automatically on merge to `main` (and builds a preview per branch/PR).
-A manual push also works and is faster than waiting on the git build:
-`npm run build` → `dist/` → `cf-provision.js deploy dream-home-design
---pages wl-dreamhome-site --dir dist` (direct wrangler upload via OAuth) — but it is
-not required. **The Worker `wl-dreamhome-api` is NOT git-triggered** — deploy it
-manually via `workers/api/cf-wrangler.cjs deploy` (fleet OAuth). base44 backend calls
-are dead at runtime post-deploy — expected until the migration wires the CF backend.
+A manual Pages upload, when explicitly needed, should use the repo-local wrapper
+and app-owned/runtime secrets, not FleetManager provisioning scripts. **The Worker
+`wl-dreamhome-api` is NOT git-triggered** — deploy it manually via
+`workers/api/cf-wrangler.cjs deploy`. base44 backend calls are dead at runtime
+post-deploy — expected until the migration wires the CF backend.
 
 ## Migration
 Phased, in order — see docs/ROADMAP.md. Nothing moves on until the current phase is

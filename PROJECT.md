@@ -46,9 +46,11 @@ package.json but UNUSED in source** — dead scaffolding, decision deferred to P
 | Files | `base44.integrations.Core.UploadFile` (Documents) | R2 |
 | Host | base44 hosting | CF Pages `wl-dreamhome-site` |
 
-## Deploy (fleet CF account, `wl-` prefix)
+## Deploy (configured CF account, `wl-` prefix)
 - **Account:** 48Labs fleet (Levi Elizaga, `37172187c20bd1fcc38760c946161fb0`),
-  `cfOwnership: fleet-shared`. All wrangler via `cfDeployEnv()`/`cf-provision.js` (OAuth).
+  `cfOwnership: fleet-shared`. As of 2026-07-22, worker/D1 wrangler calls use the
+  repo-local `workers/api/cf-wrangler.cjs` wrapper and app-owned environment
+  variables; it no longer imports FleetManager/global_files credential helpers.
 - **Pages:** `wl-dreamhome-site` → https://wl-dreamhome-site.pages.dev (live, Phase 0).
   Build clean; base44 backend calls dead at runtime (expected for Phase 0).
 - **Worker/D1/R2:** `wl-dreamhome-api` / `wl-dreamhome-db` / (R2 TBD) — NOT created
@@ -68,7 +70,7 @@ package.json but UNUSED in source** — dead scaffolding, decision deferred to P
 
 ## Levi blockers (Phase 0 output — action needed)
 1. ✅ **RESOLVED (2026-07-16): Custom domain `dreamhome.design` is attached to the
-   fleet CF account and serving.** The zone was added to the fleet account and the
+   configured Cloudflare account and serving.** The zone was added to Cloudflare and the
    Pages project `wl-dreamhome-site` now serves `dreamhome.design` (+ `www` and
    `portal.*`); the Worker API routes resolve on the custom-domain zone. (Historical:
    the zone was previously registered at GoDaddy with `ns59/ns60.domaincontrol.com`
@@ -97,4 +99,5 @@ will provide a full DB export; the P2/P3 D1 seed sources from those (see docs/FE
 - Data model: `docs/FEATURES.md` (inventory) + `src/DATABASE.md` (base44-era detail)
 - Migration plan: `docs/ROADMAP.md` · Architecture: `docs/ARCHITECTURE.md`
 
-_Last reviewed: 2026-07-06 (fleet onboarding + base44→CF Phase 0)._
+_Last reviewed: 2026-07-22 (FleetManager retirement compatibility: local CF wrapper
+decoupled from global_files credential imports)._

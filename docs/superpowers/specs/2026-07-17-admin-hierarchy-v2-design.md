@@ -135,6 +135,8 @@ super account (`admin@48labs.studio`) invisible to the client's own L1/L2 admins
 ## Global constraints
 - Never reintroduce base44 (`@base44/sdk`, `@base44/vite-plugin`, webhooks, `functions/`).
 - Worker runtime stays dependency-free; all Cloudflare/wrangler calls go through
-  `cf-wrangler.cjs` / `cf-provision.js` fleet OAuth; never print/log the CF token.
+  `workers/api/cf-wrangler.cjs` with the configured owning Cloudflare account and
+  app-owned/runtime secrets; never use FleetManager/global_files credential helpers
+  and never print/log the CF token.
 - Super admin is a permanent locked singleton, immutable via any API path.
 - Nothing deploys or merges to `main` without Levi's explicit approval.

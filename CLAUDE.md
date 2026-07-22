@@ -31,18 +31,18 @@ non-identifying stack blurb and never the agency name. Keep it that way.
   the client PORTAL data layer (Project/Document/Selection/Message/Invoice) is NOT yet
   migrated — it was placeholder-only with zero base44 records; tracked as its own project.
 
-## Deploy target (fleet Cloudflare account)
-Deploys to the **48Labs fleet Cloudflare account** (`cfOwnership: fleet-shared` — no
-dedicated account yet). Resources use the white-label `wl-` prefix:
+## Deploy target (configured Cloudflare account)
+Deploys to the configured owning Cloudflare account using app-owned/runtime
+secrets and repo-local tooling. Resources use the white-label `wl-` prefix:
 - **Pages:** `wl-dreamhome-site` → https://wl-dreamhome-site.pages.dev
 - **Worker (planned):** `wl-dreamhome-api`
 - **D1 (planned):** `wl-dreamhome-db`
-- **Custom domain:** https://dreamhome.design (NOT yet attached — zone not in the
-  fleet CF account; see PROJECT.md "Levi blockers").
+- **Custom domain:** https://dreamhome.design (see PROJECT.md "Levi blockers").
 
-**All Cloudflare/wrangler calls go through `cfDeployEnv()` / `scripts/cf-provision.js`
-in global_files — never bypass it** (it blanks the ambient CF token and pins the
-account). Fleet-account deploys run via wrangler OAuth (`info@48labs.studio`).
+**Cloudflare/wrangler calls use `workers/api/cf-wrangler.cjs`.** It reads
+repo-local/app-owned environment variables, clears ambient `CF_API_TOKEN` and
+global-key auth before spawning wrangler, and pins the configured account. Do not
+import deployment credentials from `global_files`.
 
 ## Migration discipline
 - This is a **phased** base44→CF migration. Do NOT rip out the backend ad hoc —

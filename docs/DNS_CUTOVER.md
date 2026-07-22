@@ -1,4 +1,4 @@
-# DNS cutover — dreamhome.design → Cloudflare (fleet account)
+# DNS cutover — dreamhome.design → Cloudflare
 
 > Target = a CURATED CLEAN zone (Levi's full authoritative GoDaddy zone, minus stale
 > cruft), NOT a 1:1 import. The domain was previously a Webflow site behind
@@ -6,20 +6,17 @@
 > EMAIL PRESERVATION IS A HARD GATE — the MX + SPF must exist in the CF zone BEFORE
 > the nameserver switch or Google Workspace mail for `@dreamhome.design` breaks.
 
-## STATUS: staging BLOCKED on a credential-scope gap (Levi action needed)
-Re-verified 2026-07-06: the fleet CF API token (`CF_API_TOKEN`, id `efcea2a4…`) is
-DNS-edit-scoped and **lacks `Zone:Create`** (POST /zones → 403
-`com.cloudflare.api.account.zone.create`). The wrangler OAuth token refreshes
-in-memory per call and its on-disk value is expired (verify → 401), so raw CF-API
-calls can't be scripted with it. Zone-add + DNS build + Pages custom-domain attach
-could NOT be completed by automation.
+## STATUS: historical credential note
+Re-verified 2026-07-06: the then-used Fleet Cloudflare credential could not create
+the zone, so automated zone-add + DNS build + Pages custom-domain attach were
+blocked. FleetManager credential storage and provisioning are now retired. Do not
+place deployment or DNS credentials in `global_files/.env`.
 
 **Unblock either way:**
-- **A — dashboard (fastest):** build the zone + records + Pages domains in the CF
-  dashboard on the fleet account, using the CLEAN TARGET below verbatim.
-- **B — token:** create a fleet-account API token with `Zone:Create` + `DNS:Edit` +
-  `Pages:Edit`, put it in `global_files/.env`, and the build can be scripted from
-  this exact set.
+- **A — dashboard:** build the zone + records + Pages domains in the Cloudflare
+  dashboard for the owning account, using the CLEAN TARGET below verbatim.
+- **B — tokenized automation:** use the owning app/runtime secret store and
+  repo-local tooling. Never use `global_files` as the credential source.
 
 ## CLEAN TARGET — the CF zone must contain EXACTLY these records (nothing else)
 
@@ -73,7 +70,7 @@ Stale prior-hosting (Webflow + Cloudflare-for-SaaS) — must NOT carry over:
 No `google._domainkey`, `selector1/2._domainkey`, `_dmarc`, or `CAA`. If Workspace
 DKIM is enabled later, add the selector CNAME/TXT CF-side too.
 
-## Build steps (dashboard, fleet account — Levi Elizaga / 37172187…)
+## Build steps (Cloudflare dashboard)
 1. **Add site** → `dreamhome.design` → plan Free. Note the two assigned Cloudflare
    nameservers (`*.ns.cloudflare.com`).
 2. CF auto-scans GoDaddy on add — **reconcile the import to the CLEAN TARGET**: keep

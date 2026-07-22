@@ -88,7 +88,7 @@ The existing Edit dialog (name + tier) gains:
 
 ## Global constraints
 - Never reintroduce base44 (`@base44/*`, webhooks, `functions/`). Worker runtime stays dependency-free.
-- All Cloudflare/wrangler calls go through `cf-wrangler.cjs` fleet OAuth; never print/log the CF token; never `--remote` except the (human-approved) prod deploy.
+- All Cloudflare/wrangler calls go through `workers/api/cf-wrangler.cjs` with app-owned/runtime Cloudflare credentials; never print/log the CF token; never `--remote` except the (human-approved) prod deploy.
 - The super admin (rank 0) stays immutable via every API path — `patchUser`'s super guard is unchanged and covers the new fields.
 - Passwords are only ever stored hashed (`hashPassword`); raw passwords never logged or returned.
 - Nothing deploys or merges to `main` without Levi's explicit approval.
