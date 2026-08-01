@@ -1,8 +1,27 @@
 import React from 'react';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 export default function Logo({ className = '', light = false }) {
+  const settings = useSiteSettings();
   const textColor = light ? 'text-white' : 'text-charcoal';
   const accentColor = 'text-gold';
+
+  // Admin-uploaded logo (Site Settings → Brand), one image per background tone.
+  // A missing tone falls through to the built-in wordmark below rather than to
+  // the other upload — a light-background logo drawn on charcoal (or the
+  // reverse) would be invisible. The wordmark recolors itself, so it is always
+  // a safe fallback, including while `settings` is still loading.
+  const uploaded = light ? settings?.logo_url_on_dark : settings?.logo_url;
+
+  if (uploaded) {
+    return (
+      <img
+        src={uploaded}
+        alt="Dream Home Design"
+        className={`h-10 w-auto max-w-[200px] object-contain ${className}`}
+      />
+    );
+  }
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
