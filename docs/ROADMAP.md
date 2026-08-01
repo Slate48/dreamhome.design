@@ -7,15 +7,22 @@
 > Levi approves this plan.
 > Last updated: 2026-07-06.
 
+## FleetManager retirement compatibility ✅ DONE (2026-07-22)
+- Decoupled the repo-local Cloudflare wrapper (`workers/api/cf-wrangler.cjs`) from
+  FleetManager/global credential helpers. The wrapper now resolves app-owned
+  environment variables directly, clears ambient `CF_API_TOKEN`/global-key auth,
+  and pins the configured account before spawning wrangler.
+- No app runtime, routes, auth, data model, UI, or migration phase behavior changed.
+
 ## Phase 0 — Onboard + CF deploy target ✅ DONE (2026-07-06)
 - Adopted into the fleet as `client-whitelabel` (echohouse/dreamhome/site).
 - Registered in `global_files/projects.json` + FleetManager state.
-- CF Pages `wl-dreamhome-site` created on the fleet account (OAuth) and deployed
+- CF Pages `wl-dreamhome-site` created on the configured Cloudflare account and deployed
   (direct upload of `npm run build` → `dist`). Live: https://wl-dreamhome-site.pages.dev
   (build clean; base44 backend calls dead at runtime — expected).
 - Inventory written (docs/FEATURES.md): 21 routes, 14 entities, auth, one file-upload
   integration, no functions/LLM/email, Stripe deps unused.
-- Custom domain `dreamhome.design` NOT attached — zone not in fleet CF account
+- Custom domain `dreamhome.design` NOT attached — zone not yet in the configured Cloudflare account
   (Levi blocker; see PROJECT.md).
 
 ## Migration inventory (source for the phases below)
@@ -33,7 +40,7 @@
 
 ## Fast-track — PUBLIC SITE migrated to Cloudflare ✅ DONE (2026-07-06)
 Public-site-first slice (public routes only), on branch `feat/migrate-public-site`:
-- **D1 `wl-dreamhome-db`** created on the fleet account; schema
+- **D1 `wl-dreamhome-db`** created on the configured Cloudflare account; schema
   `workers/api/migrations/0001_public_content.sql` (8 public-content tables +
   ContactInquiry). Seeded idempotently from `database_export.json`
   (`workers/api/seed-from-export.cjs`): PortfolioItem 55, TeamMember 30, FAQItem 8,
@@ -71,8 +78,8 @@ longer read anywhere; a stale copy in the Pages build vars is harmless and being
 ## Phase 2 — D1 schema + seed → `wl-dreamhome-db`  ⏳ planned
 Derive the schema from the 14 entities (enums, defaults, FKs on `project_id`, JSON
 columns for `Project.stage_notes` + `InvestmentTier.payment_methods`; `SiteSettings`
-singleton `key='main'`). Create D1 `wl-dreamhome-db` on the fleet account (via
-`cf-provision`/wrangler through `cfDeployEnv`). Seed from the in-repo record files +
+singleton `key='main'`). Create D1 `wl-dreamhome-db` on the configured account (via
+repo-local `workers/api/cf-wrangler.cjs`). Seed from the in-repo record files +
 Levi's full export (NOT an API scrape). Exit: schema applied remote, row counts match
 the export.
 
@@ -100,7 +107,7 @@ Billing page (invoices are display-only today). Exit: deps match reality — eit
 removed, or a working payment flow. (Levi decision — see PROJECT.md.)
 
 ## Phase 7 — Cutover + verify  ⏳ planned
-Attach `dreamhome.design` to Pages (requires the zone in the fleet CF account —
+Attach `dreamhome.design` to Pages (requires the zone in the configured Cloudflare account —
 Levi blocker). Full verification: all 21 routes, contact write, portal CRUD +
 ownership isolation, document upload, auth/roles, zero `@base44`/`base44.com`
 references, correct built bundle live (grep all JS chunks), no Mac-viewport clipping.
@@ -108,7 +115,7 @@ Then coordinate base44 teardown (app `6a0c98b9972c40dc9ebe5d05`) — AFTER verif
 after base44 finishes pushing records. Exit: production on Cloudflare, base44 severed.
 
 ## Levi blockers (see PROJECT.md for detail)
-- Custom domain `dreamhome.design` zone not in fleet CF account (GoDaddy NS cutover).
+- Custom domain `dreamhome.design` zone not in the configured Cloudflare account (GoDaddy NS cutover).
 - Git-remote migration DEFERRED until base44 finishes exporting records.
 - base44 teardown timing (after P7 + record push complete).
 - Stripe decision (P6).

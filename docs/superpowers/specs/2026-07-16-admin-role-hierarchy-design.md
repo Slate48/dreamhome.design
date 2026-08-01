@@ -245,4 +245,4 @@ CREATE INDEX IF NOT EXISTS idx_users_invite_token ON users(invite_token_hash);
 3. **Frontend** — AuthContext caps, nav filtering, `CapabilityGuard`, Admins page (People
    + Tiers), invite-accept page, PageNotFound fix.
 4. **Tests + build**, then **deploy** (staging → dev verify → PR staging→main; Worker
-   deployed manually via fleet OAuth per the standing operational note).
+   deployed manually via the repo-local wrapper and app-owned/runtime secrets).

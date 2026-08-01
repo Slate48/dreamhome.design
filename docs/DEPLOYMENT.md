@@ -114,11 +114,10 @@ proves the frontend still builds), test the Worker locally, then include it in t
 
 - Both projects deploy via Cloudflare's **native git integration** (Pages → Settings →
   Builds), each pinned to its `production_branch` (`main` / `staging` respectively).
-- All CF/wrangler operations go through the fleet credential wrapper
-  (`cfDeployEnv()` / `cf-credentials.js`, fleet account `37172187c20bd1fcc38760c946161fb0`),
+- All CF/wrangler operations go through the repo-local credential wrapper
+  (`workers/api/cf-wrangler.cjs`, configured account `37172187c20bd1fcc38760c946161fb0`),
   never ambient tokens. The provisioning/verify scripts used for this setup live in the
-  session scratchpad (read-only inspect + one-shot reconfig helpers); they use
-  `resolveCfCreds(null)` and never print the token.
+  session scratchpad as historical read-only evidence and never print token values.
 - `dev.dreamhome.design` is a proxied CNAME → `wl-dreamhome-site-dev.pages.dev` in the
   `dreamhome.design` zone.
 

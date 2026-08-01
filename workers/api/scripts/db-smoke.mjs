@@ -1,14 +1,14 @@
 // Real-D1 smoke test — applies migrations 0001..0005 to a fresh LOCAL SQLite (via
-// wrangler --local through the fleet cf-wrangler wrapper) and runs the actual
+// wrangler --local through the repo-local cf-wrangler wrapper) and runs the actual
 // invite/deactivate/delete SQL. Catches schema/constraint drift the mock harness
 // cannot (e.g. the NOT NULL password_hash bug that produced the invite-500).
 //
 // Run:  cd workers/api && node scripts/db-smoke.mjs
 // Lives OUTSIDE test/ on purpose: `node --test test/` globs every *.{mjs,js} under a
 // test/ directory (pattern **/test/**/*), so ANY name in test/ would join the default
-// suite and drag wrangler + fleet OAuth into it. Keeping it in scripts/ makes it a
+// suite and drag wrangler + app-owned/runtime Cloudflare credentials into it. Keeping it in scripts/ makes it a
 // standalone, run-on-demand check — the unit suite stays fast and wrangler-free.
-// Requires local fleet OAuth (cf-wrangler resolves creds) but never touches --remote.
+// Requires local app-owned/runtime Cloudflare credentials (cf-wrangler resolves creds) but never touches --remote.
 
 import { spawnSync } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'

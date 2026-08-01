@@ -81,7 +81,8 @@ export const ENTITIES = {
     columns: [
       'key', 'phone', 'phone_display', 'email_sales', 'email_billing', 'billing_contact_name',
       'address', 'city_state', 'google_maps_embed_url', 'instagram_url', 'facebook_url',
-      'instagram_handle', 'website_url', 'consultation_booking_url', 'logo_url', 'tagline',
+      'instagram_handle', 'website_url', 'consultation_booking_url', 'logo_url',
+      'logo_url_on_dark', 'tagline',
     ],
     required: ['key'],
   },

@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - **base44 hard-cut:** never reintroduce `@base44/sdk`, `@base44/vite-plugin`, base44 webhooks, or base44 `functions/`. The Worker runtime stays **dependency-free** (no npm packages in Worker code).
-- **Cloudflare access:** all wrangler/CF calls go through `workers/api/cf-wrangler.cjs` (fleet OAuth). Never print/log/serialize the CF token; never use `--remote` except a human-approved prod deploy. **Nothing deploys or merges to `main` without Levi's explicit approval** — this plan STOPS at a mergeable branch.
+- **Cloudflare access:** all wrangler/CF calls go through `workers/api/cf-wrangler.cjs` with app-owned/runtime secrets. Never print/log/serialize the CF token; never use `--remote` except a human-approved prod deploy. **Nothing deploys or merges to `main` without Levi's explicit approval** — this plan STOPS at a mergeable branch.
 - **Passwords** are only ever stored hashed via `hashPassword` (format `v1:salt:hash`). Raw passwords are never logged or returned. `MIN_PASSWORD_LEN = 8`.
 - **Email normalization:** store emails **trimmed + lowercased**, matching `inviteUser` (`admin.js:212`) and login (`index.js:90`), both `.trim().toLowerCase()`. Login looks accounts up by the lowercased email, so a mixed-case stored email would lock the user out.
 - **Super admin (rank 0) stays immutable via every API path.** `patchUser`'s existing `SUPER_TIER_RANK` guard (admin.js:291) must keep running *before* any of the new fields are written.

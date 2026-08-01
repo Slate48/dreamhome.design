@@ -17,7 +17,7 @@
 - Fixed 4 bands: ranks 0/1/2/3 with tier ids `tier_superadmin`/`tier_admin`/`tier_manager`/`tier_member`. Tier ids are REUSED (never renamed) so existing `users.tier_id` references stay valid.
 - Worker runtime stays dependency-free (no new npm packages in the Worker bundle); tests add no new runtime/dev dependency — the smoke test drives the already-present wrangler.
 - Never reintroduce base44 (`@base44/sdk`, `@base44/vite-plugin`, webhooks, `functions/`).
-- All Cloudflare/wrangler calls go through `workers/api/cf-wrangler.cjs` (fleet OAuth); never print/log/serialize the CF token, and never use `--remote` in this plan (local `--local` state only).
+- All Cloudflare/wrangler calls go through `workers/api/cf-wrangler.cjs` with app-owned/runtime secrets; never print/log/serialize the CF token, and never use `--remote` in this plan (local `--local` state only).
 - Nothing deploys or merges to `main` without Levi's explicit approval. This plan ends at a green, reviewed branch.
 - Worker unit tests run from `workers/api/` with `node --test test/` (no package.json, `.mjs` files). The default suite must stay fast and must NOT require wrangler/network — the real-D1 check is a standalone script kept OUTSIDE `test/` at `workers/api/scripts/db-smoke.mjs`, run on demand. (Node's `--test` globs `**/test/**/*.{mjs,js}` — every `.mjs` under a `test/` dir joins the suite regardless of a `.test.` infix, so the script must not live in `test/`.)
 - The frontend has no test framework; frontend task verification is `npm run build` (exit 0) + `npm run lint` (exit 0) + manual, matching the existing hierarchy work.
@@ -521,7 +521,7 @@ git commit -m "feat(db): migration 0005 — add Member tier, relabel Level 1/2, 
 - Create: `workers/api/scripts/db-smoke.mjs`
 
 **Interfaces:**
-- Consumes: migrations `0001`→`0005`; `cf-wrangler.cjs` (fleet OAuth); wrangler `--local`.
+- Consumes: migrations `0001`→`0005`; `cf-wrangler.cjs` with app-owned/runtime secrets; wrangler `--local`.
 - Produces: a standalone runnable script — `node scripts/db-smoke.mjs` (from `workers/api`) prints `SMOKE PASS` and exits 0 on success, prints the failure and exits 1 otherwise. It lives OUTSIDE `test/` so `node --test test/` never globs it (Node's `--test` runs every `.mjs` under a `test/` dir), keeping the default unit suite fast and wrangler-free.
 
 **Why this exists:** the `_mock.mjs` harness enforces no SQL constraints, which is why the invite-500 (`NOT NULL constraint failed: users.password_hash`) slipped past every unit test. This script runs the actual invite/patch/delete SQL against a real SQLite so that class of drift fails loudly.
@@ -532,16 +532,16 @@ Create `workers/api/scripts/db-smoke.mjs`:
 
 ```js
 // Real-D1 smoke test — applies migrations 0001..0005 to a fresh LOCAL SQLite (via
-// wrangler --local through the fleet cf-wrangler wrapper) and runs the actual
+// wrangler --local through the repo-local cf-wrangler wrapper) and runs the actual
 // invite/deactivate/delete SQL. Catches schema/constraint drift the mock harness
 // cannot (e.g. the NOT NULL password_hash bug that produced the invite-500).
 //
 // Run:  cd workers/api && node scripts/db-smoke.mjs
 // Lives OUTSIDE test/ on purpose: `node --test test/` globs every *.{mjs,js} under a
 // test/ directory (pattern **/test/**/*), so ANY name in test/ would join the default
-// suite and drag wrangler + fleet OAuth into it. Keeping it in scripts/ makes it a
+// suite and drag wrangler + app-owned/runtime Cloudflare credentials into it. Keeping it in scripts/ makes it a
 // standalone, run-on-demand check — the unit suite stays fast and wrangler-free.
-// Requires local fleet OAuth (cf-wrangler resolves creds) but never touches --remote.
+// Requires local app-owned/runtime Cloudflare credentials (cf-wrangler resolves creds) but never touches --remote.
 
 import { spawnSync } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'

@@ -9,7 +9,7 @@ compatibility_date = "2024-11-01"
 # until the frontend has fully cut over to the same-origin route.
 workers_dev = true
 
-# D1: wl-dreamhome-db (fleet account). database_id filled after `d1 create`.
+# D1: wl-dreamhome-db (configured Cloudflare account). database_id filled after `d1 create`.
 [[d1_databases]]
 binding = "DB"
 database_name = "wl-dreamhome-db"
