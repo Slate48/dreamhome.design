@@ -7,7 +7,7 @@
 ## What it is
 A three-surface web product for a custom home-design / cabinetry studio, live at
 **https://dreamhome.design**:
-1. **Public marketing site** — home, about, process, portfolio, FAQ, investment, contact.
+1. **Public marketing site** — home, about, process, portfolio, videos, FAQ, investment, contact.
 2. **Client portal** (`/portal/*`, role `client`) — per-project dashboard, documents,
    material selections, messages, billing/invoices, help.
 3. **Admin CMS** (`/admin/*`, roles `manager`/`admin`/`super_admin`) — manages
