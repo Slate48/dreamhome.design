@@ -5,15 +5,16 @@
 > `src/DATABASE.md` has the base44-era field-level detail; this file is the
 > migration-facing inventory.
 
-## Surfaces / routes (21 routes, from `src/App.jsx`)
+## Surfaces / routes (25 routes, from `src/App.jsx`)
 
-### Public marketing site (7, no auth, `PublicLayout`)
+### Public marketing site (8, no auth, `PublicLayout`)
 | Route | Page | base44 entity read |
 |---|---|---|
 | `/` | Home | (SiteSettings via `useSiteSettings`) |
 | `/about` | About | `TeamMember` |
 | `/process` | Process | `ProcessStage` |
 | `/portfolio` | Portfolio | `PortfolioItem` |
+| `/videos` | VideoLibrary | YouTube channel library (23 videos + 48 Shorts, categorized; no app entity) |
 | `/faq` | FAQ | `FAQItem` |
 | `/investment` | Investment | `InvestmentTier` |
 | `/contact` | Contact | writes `ContactInquiry` |
@@ -29,7 +30,7 @@
 | `/portal/billing` | Billing | `Invoice` (display-only, no payment) |
 | `/portal/help` | Help | (static) |
 
-### Admin CMS (8, roles `manager`/`admin`/`super_admin`, `AdminLayout` + `RoleGuard`)
+### Admin CMS (9, roles `manager`/`admin`/`super_admin`, `AdminLayout` + `RoleGuard`)
 | Route | Page | Manages |
 |---|---|---|
 | `/admin` | AdminDashboard | overview |
@@ -39,6 +40,7 @@
 | `/admin/process` | AdminProcess | `ProcessStage` |
 | `/admin/investment` | AdminInvestment | `InvestmentTier` |
 | `/admin/testimonials` | AdminTestimonials | `Testimonial` |
+| `/admin/inquiries` | AdminInquiries | `ContactInquiry` |
 | `/admin/settings` | AdminSettings | `SiteSettings` (role `admin`/`super_admin` only) |
 
 ## Data model — 14 base44 entities (`base44/entities/*.jsonc`)
