@@ -31,6 +31,7 @@ import Portfolio from './pages/Portfolio';
 import FAQ from './pages/FAQ';
 import Investment from './pages/Investment';
 import Contact from './pages/Contact';
+import VideoLibrary from './pages/VideoLibrary';
 
 // Layouts
 import PublicLayout from './components/shared/PublicLayout';
@@ -94,6 +95,7 @@ const AuthenticatedApp = () => {
         <Route path="/about" element={<About />} />
         <Route path="/process" element={<Process />} />
         <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/videos" element={<VideoLibrary />} />
         <Route path="/faq" element={<FAQ />} />
         <Route path="/investment" element={<Investment />} />
         <Route path="/contact" element={<Contact />} />
