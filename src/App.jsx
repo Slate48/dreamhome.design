@@ -32,6 +32,7 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Process from './pages/Process';
 import Portfolio from './pages/Portfolio';
+import VideoLibrary from './pages/VideoLibrary';
 import FAQ from './pages/FAQ';
 import Investment from './pages/Investment';
 import Contact from './pages/Contact';
@@ -98,6 +99,7 @@ const AuthenticatedApp = () => {
         <Route path="/about" element={<About />} />
         <Route path="/process" element={<Process />} />
         <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/videos" element={<VideoLibrary />} />
         <Route path="/faq" element={<FAQ />} />
         <Route path="/investment" element={<Investment />} />
         <Route path="/contact" element={<Contact />} />
