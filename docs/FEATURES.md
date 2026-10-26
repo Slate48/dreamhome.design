@@ -5,15 +5,16 @@
 > `src/DATABASE.md` has the base44-era field-level detail; this file is the
 > migration-facing inventory.
 
-## Surfaces / routes (21 routes, from `src/App.jsx`)
+## Surfaces / routes (from `src/App.jsx`)
 
-### Public marketing site (7, no auth, `PublicLayout`)
+### Public marketing site (8, no auth, `PublicLayout`)
 | Route | Page | base44 entity read |
 |---|---|---|
 | `/` | Home | (SiteSettings via `useSiteSettings`) |
 | `/about` | About | `TeamMember` |
 | `/process` | Process | `ProcessStage` |
 | `/portfolio` | Portfolio | `PortfolioItem` |
+| `/videos` | VideoLibrary | YouTube channel library (23 videos + 48 Shorts, categorized; no app entity) |
 | `/faq` | FAQ | `FAQItem` |
 | `/investment` | Investment | `InvestmentTier` |
 | `/contact` | Contact | writes `ContactInquiry` |
